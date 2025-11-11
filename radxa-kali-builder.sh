@@ -836,8 +836,8 @@ build_system() {
         --memtest "memtest86+" \
         --win32-loader false \
         --debian-installer none \
-        --updates true \
-        --security true \
+        --updates false \
+        --security false \
         --apt-recommends false \
         --apt-secure false \
         --bootloaders grub-efi \
