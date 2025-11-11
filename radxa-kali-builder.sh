@@ -902,6 +902,8 @@ build_system() {
     # Copy package lists
     if [[ -d "package-lists" ]]; then
         cp package-lists/* config/package-lists/
+        # Ensure unavailable or deferred lists are not queued during install pass
+        rm -f config/package-lists/waydroid.list || true
     fi
 
     # Add Radxa repository inside chroot (no effect on host)
