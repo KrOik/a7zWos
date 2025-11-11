@@ -1,0 +1,53 @@
+#!/bin/bash
+
+echo "=== 配置厂商信息 ==="
+
+# 设置系统厂商信息
+echo "KrNormyDev" > /etc/vendor-name
+echo "a7zWos" > /etc/product-name
+echo "1.0.0" > /etc/product-version
+
+# 创建厂商信息文件
+cat > /etc/kali-radxa-info << 'VENDOR_EOF'
+# Radxa Kali Linux - KrNormyDev Edition
+VENDOR=KrNormyDev
+PRODUCT=a7zWos
+VERSION=1.0.0
+BUILD_DATE=$(date +%Y%m%d)
+KALI_VERSION=kali-rolling
+RADXA_TARGET=cubie-a7z
+VENDOR_EOF
+
+# 创建系统标识
+cat > /etc/os-release-radxa << 'OS_EOF'
+NAME="Kali Linux"
+VERSION="2024.1"
+ID=kali
+ID_LIKE=debian
+PRETTY_NAME="Kali Linux KrNormyDev Edition"
+VERSION_ID="2024.1"
+HOME_URL="https://www.kali.org/"
+SUPPORT_URL="https://forums.kali.org/"
+BUG_REPORT_URL="https://bugs.kali.org/"
+VENDOR=KrNormyDev
+PRODUCT=a7zWos
+OS_EOF
+
+# 创建欢迎信息
+cat > /etc/motd << 'MOTD_EOF'
+Welcome to Kali Linux KrNormyDev Edition!
+→ Wayland桌面环境已就绪
+→ ZSH终端已配置完成  
+→ Kali渗透测试工具已安装
+→ Radxa硬件支持已激活
+→ Waydroid Android容器已配置
+
+系统信息:
+- 厂商: KrNormyDev
+- 产品: a7zWos
+- 版本: 1.0.0
+- 架构: arm64
+- 发行版: kali-rolling
+MOTD_EOF
+
+echo "厂商信息配置完成"

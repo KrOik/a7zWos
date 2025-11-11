@@ -1,0 +1,37 @@
+#!/bin/bash
+
+echo "=== Waydroid无KVM配置 ==="
+
+# 安装Waydroid
+apt-get install -y waydroid python3-gbinder lxc cgroupfs-mount
+
+# 配置Waydroid无KVM模式
+cat > /etc/waydroid.cfg << 'WAYDROID_EOF'
+[waydroid]
+arch = arm64
+vendor_type = MAINLINE
+mount_overlays = True
+auto_adb = True
+images_path = /usr/share/waydroid-images
+system_ota = https://ota.waydro.id/system/lineage/waydroid_arm64/VANILLA.json
+vendor_ota = https://ota.waydro.id/vendor/waydroid_arm64/MAINLINE.json
+binder = anbox-binder
+vndbinder = anbox-vndbinder
+hwbinder = anbox-hwbinder
+WAYDROID_EOF
+
+# 配置LXC无特权容器
+cat > /etc/lxc/default.conf << 'LXC_EOF'
+lxc.net.0.type = veth
+lxc.net.0.link = lxcbr0
+lxc.net.0.flags = up
+lxc.net.0.hwaddr = 00:16:3e:xx:xx:xx
+lxc.idmap = u 0 100000 65536
+lxc.idmap = g 0 100000 65536
+LXC_EOF
+
+# 启用IP转发
+echo "net.ipv4.ip_forward = 1" >> /etc/sysctl.conf
+sysctl -p
+
+echo "Waydroid无KVM配置完成"

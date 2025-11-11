@@ -1,0 +1,38 @@
+快速部署开始于: Tue 11 Nov 2025 12:33:10 PM UTC
+[0;34m[INFO][0m 系统信息:
+[0;34m[INFO][0m 检查磁盘空间...
+[0;32m[SUCCESS][0m ✓ 磁盘空间充足: 21GB (需要 20GB)
+[0;34m[INFO][0m 检查内存...
+[0;32m[SUCCESS][0m ✓ 内存充足: 7GB (推荐 4GB)
+[0;34m[INFO][0m 检查必需工具...
+[0;32m[SUCCESS][0m ✓ git 已安装
+[0;32m[SUCCESS][0m ✓ curl 已安装
+[0;32m[SUCCESS][0m ✓ wget 已安装
+[0;32m[SUCCESS][0m ✓ tar 已安装
+[0;32m[SUCCESS][0m ✓ gzip 已安装
+[0;32m[SUCCESS][0m ✓ xz 已安装
+[0;32m[SUCCESS][0m ✓ make 已安装
+[0;32m[SUCCESS][0m ✓ gcc 已安装
+[0;31m[ERROR][0m ✗ g++ 未安装
+[0;34m[INFO][0m 安装缺失的工具: g++
+[0;34m[INFO][0m 部署选项:
+[0;34m[INFO][0m 选择部署模式: full
+[0;34m[INFO][0m 执行完整部署...
+[0;34m[INFO][0m 创建项目结构...
+[0;32m[SUCCESS][0m ✓ 创建目录: configs
+[0;32m[SUCCESS][0m ✓ 创建目录: hooks
+[0;32m[SUCCESS][0m ✓ 创建目录: package-lists
+[0;32m[SUCCESS][0m ✓ 创建目录: build
+[0;32m[SUCCESS][0m ✓ 创建目录: output
+[0;32m[SUCCESS][0m ✓ 创建目录: logs
+[0;32m[SUCCESS][0m ✓ 创建目录: tests
+[0;34m[INFO][0m 检查主构建脚本...
+[0;32m[SUCCESS][0m ✓ 主构建脚本已存在
+[0;34m[INFO][0m 生成配置文件...
+[0;32m[SUCCESS][0m 完整部署完成！
+[0;32m[SUCCESS][0m ========================================
+[0;32m[SUCCESS][0m   部署完成！
+[0;32m[SUCCESS][0m ========================================
+[0;34m[INFO][0m 下一步:
+[0;34m[INFO][0m 更多信息请查看日志: /home/radxa/a7zWos/quick-deploy.log
+快速部署结束于: Tue 11 Nov 2025 12:40:04 PM UTC

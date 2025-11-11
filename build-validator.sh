@@ -536,7 +536,7 @@ main() {
             ((passed_tests++))
         else
             if [ "$test_func" = "validate_dependencies" ] || [ "$test_func" = "validate_security" ]; then
-                ((warning_tests++)
+                ((warning_tests++))
             else
                 ((failed_tests++))
             fi

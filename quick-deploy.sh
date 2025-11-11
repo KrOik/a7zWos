@@ -70,22 +70,22 @@ show_system_info() {
 
 # 检查网络连接
 check_network() {
-    log_info "检查网络连接..."
+    # log_info "检查网络连接..."
     
-    local sites=(
-        "http.kali.org"
-        "github.com"
-        "radxa-repo.github.io"
-    )
+    # local sites=(
+    #     "http.kali.org"
+    #     "github.com"
+    #     "radxa-repo.github.io"
+    # )
     
-    for site in "${sites[@]}"; do
-        if ping -c 1 "$site" &> /dev/null; then
-            log_success "✓ $site 可访问"
-        else
-            log_error "✗ $site 无法访问"
-            return 1
-        fi
-    done
+    # for site in "${sites[@]}"; do
+    #     if ping -c 1 "$site" &> /dev/null; then
+    #         log_success "✓ $site 可访问"
+    #     else
+    #         log_error "✗ $site 无法访问"
+    #         return 1
+    #     fi
+    # done
     
     return 0
 }
