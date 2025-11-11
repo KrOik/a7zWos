@@ -3,14 +3,37 @@
 echo "=== Radxa硬件初始化 ==="
 
 # 安装Radxa特定包
-apt-get install -y firmware-realtek firmware-ath9k-htc firmware-brcm80211
-apt-get install -y firmware-libertas firmware-misc-nonfree firmware-iwlwifi radxa-system-config
+installable() {
+    local pkg="$1"
+    local cand
+    cand=$(apt-cache policy "$pkg" 2>/dev/null | awk '/Candidate:/ {print $2}')
+    [[ -n "$cand" && "$cand" != "(none)" ]]
+}
+
+fw=(firmware-realtek firmware-ath9k-htc firmware-brcm80211 firmware-libertas firmware-misc-nonfree firmware-iwlwifi)
+to_install=()
+for p in "${fw[@]}"; do
+    if installable "$p"; then
+        to_install+=("$p")
+    else
+        echo "Skipping unavailable package: $p"
+    fi
+done
+if [[ ${#to_install[@]} -gt 0 ]]; then
+    apt-get install -y "${to_install[@]}"
+fi
 
 # 配置设备树
 cp /usr/lib/linux-image-*/allwinner/a733-cubie-a7z.dtb /boot/
 
 # 配置GPIO支持
-apt-get install -y libmraa-dev python3-mraa
+for p in libmraa-dev python3-mraa radxa-system-config; do
+    if installable "$p"; then
+        apt-get install -y "$p"
+    else
+        echo "Skipping unavailable package: $p"
+    fi
+done
 
 # 配置I2C支持
 echo "i2c-dev" >> /etc/modules-load.d/radxa.conf

@@ -374,15 +374,37 @@ RADXA_FW=(
   firmware-libertas
   firmware-misc-nonfree
   firmware-iwlwifi
-  radxa-system-config
 )
-apt-get install -y "${RADXA_FW[@]}"
+installable() {
+  local pkg="$1"
+  local cand
+  cand=$(apt-cache policy "$pkg" 2>/dev/null | awk '/Candidate:/ {print $2}')
+  [[ -n "$cand" && "$cand" != "(none)" ]]
+}
+
+TO_INSTALL=()
+for p in "${RADXA_FW[@]}"; do
+  if installable "$p"; then
+    TO_INSTALL+=("$p")
+  else
+    echo "Skipping unavailable package: $p"
+  fi
+done
+if [[ ${#TO_INSTALL[@]} -gt 0 ]]; then
+  apt-get install -y "${TO_INSTALL[@]}"
+fi
 
 # Configure device tree
 cp /usr/lib/linux-image-*/allwinner/a733-cubie-a7z.dtb /boot/
 
-# GPIO support
-apt-get install -y libmraa-dev python3-mraa
+# GPIO support (install if available)
+for p in libmraa-dev python3-mraa radxa-system-config; do
+  if installable "$p"; then
+    apt-get install -y "$p"
+  else
+    echo "Skipping unavailable package: $p"
+  fi
+done
 
 # I2C support
 echo "i2c-dev" >> /etc/modules-load.d/radxa.conf
@@ -748,16 +770,8 @@ EOF
 
     # Radxa hardware support
     cat > "${SCRIPT_DIR}/package-lists/radxa-hardware.list" << 'EOF'
-# Radxa hardware support packages
-firmware-realtek
-firmware-ath9k-htc
-firmware-brcm80211
-firmware-libertas
-firmware-misc-nonfree
-firmware-iwlwifi
-radxa-system-config
-libmraa-dev
-python3-mraa
+# Radxa hardware support packages (installed via 9990 hook if available)
+# 留空以避免在安装阶段因仓库差异导致失败
 EOF
 
     # Wayland desktop
