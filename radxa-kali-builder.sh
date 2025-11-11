@@ -867,6 +867,8 @@ build_system() {
     
     # Configure live-build
     log_info "Initializing live-build..."
+    # Ensure prior configs do not leak outdated mirrors or options
+    lb clean || true
     lb config \
         --architectures "$ARCH" \
         --distribution "$DISTRIBUTION" \
@@ -874,11 +876,15 @@ build_system() {
         --bootappend-live "boot=live components" \
         --memtest "memtest86+" \
         --win32-loader false \
-        --debian-installer false \
+        --debian-installer none \
         --updates true \
         --security true \
         --apt-recommends false \
         --apt-secure false \
+        --bootloaders grub-efi \
+        --mirror-bootstrap "http://http.kali.org/kali" \
+        --mirror-chroot "http://http.kali.org/kali" \
+        --mirror-binary "http://http.kali.org/kali" \
         --binary-images iso-hybrid \
         --iso-volume "${VENDOR}-${PRODUCT}-${VERSION}" \
         --iso-publisher "$VENDOR" \
