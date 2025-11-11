@@ -24,7 +24,28 @@ if [[ ${#to_install[@]} -gt 0 ]]; then
 fi
 
 # 配置设备树
-cp /usr/lib/linux-image-*/allwinner/a733-cubie-a7z.dtb /boot/
+dtb_src=""
+for candidate in \
+    /usr/lib/linux-image-*/allwinner/a733-cubie-a7z.dtb \
+    /usr/lib/linux-image-*/allwinner/sun60i-a733-cubie-a7z.dtb; do
+    if ls "$candidate" >/dev/null 2>&1; then
+        dtb_src="$candidate"
+        break
+    fi
+done
+if [[ -n "$dtb_src" ]]; then
+    base_name="$(basename "$dtb_src")"
+    cp "$dtb_src" /boot/
+    # 创建兼容别名
+    if [[ "$base_name" == "sun60i-a733-cubie-a7z.dtb" ]]; then
+        ln -sf "/boot/$base_name" "/boot/a733-cubie-a7z.dtb"
+    else
+        ln -sf "/boot/$base_name" "/boot/sun60i-a733-cubie-a7z.dtb"
+    fi
+    echo "已复制 $base_name 到 /boot 并创建别名"
+else
+    echo "未在 /usr/lib/linux-image-*/allwinner 找到 Cubie-A7Z 设备树，跳过复制"
+fi
 
 # 配置GPIO支持
 for p in libmraa-dev python3-mraa radxa-system-config; do
@@ -42,6 +63,8 @@ echo "i2c-dev" >> /etc/modules-load.d/radxa.conf
 echo "spidev" >> /etc/modules-load.d/radxa.conf
 
 # 设置硬件权限
-usermod -a -G gpio,dialout,i2c,spi kali
+if id "kali" &>/dev/null; then
+    usermod -a -G gpio,dialout,i2c,spi kali
+fi
 
 echo "Radxa硬件初始化完成"

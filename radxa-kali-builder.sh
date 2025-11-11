@@ -395,7 +395,28 @@ if [[ ${#TO_INSTALL[@]} -gt 0 ]]; then
 fi
 
 # Configure device tree
-cp /usr/lib/linux-image-*/allwinner/a733-cubie-a7z.dtb /boot/
+dtb_src=""
+for candidate in \
+  /usr/lib/linux-image-*/allwinner/a733-cubie-a7z.dtb \
+  /usr/lib/linux-image-*/allwinner/sun60i-a733-cubie-a7z.dtb; do
+  if ls "$candidate" >/dev/null 2>&1; then
+    dtb_src="$candidate"
+    break
+  fi
+done
+if [[ -n "$dtb_src" ]]; then
+  base_name="$(basename "$dtb_src")"
+  cp "$dtb_src" /boot/
+  # Create a compatibility alias for the alternate name
+  if [[ "$base_name" == "sun60i-a733-cubie-a7z.dtb" ]]; then
+    ln -sf "/boot/$base_name" "/boot/a733-cubie-a7z.dtb"
+  else
+    ln -sf "/boot/$base_name" "/boot/sun60i-a733-cubie-a7z.dtb"
+  fi
+  echo "Copied $base_name to /boot and created alias"
+else
+  echo "No Cubie-A7Z DTB found under /usr/lib/linux-image-*/allwinner; skipping copy."
+fi
 
 # GPIO support (install if available)
 for p in libmraa-dev python3-mraa radxa-system-config; do
