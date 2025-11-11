@@ -1,0 +1,352 @@
+[0;34m[INFO][0m Starting Radxa Cubie A7Z System Tests
+[0;34m[INFO][0m Initializing test environment...
+[0;32m[SUCCESS][0m Test environment initialized
+[0;34m[INFO][0m Running all tests...
+[0;34m[INFO][0m Testing project structure...
+[0;32m[SUCCESS][0m ✓ Directory exists: .github/workflows
+[0;32m[SUCCESS][0m ✓ Directory exists: customize-hooks
+[0;32m[SUCCESS][0m ✓ File exists: rootfs.jsonnet
+[0;32m[SUCCESS][0m ✓ File exists: image.jsonnet
+[0;32m[SUCCESS][0m ✓ File exists: build.sh
+[0;32m[SUCCESS][0m ✓ File exists: quick-build.sh
+[0;34m[INFO][0m Testing configuration files...
+[0;32m[SUCCESS][0m ✓ rootfs.jsonnet exists
+[0;32m[SUCCESS][0m ✓ image.jsonnet exists
+[1;33m[WARNING][0m jsonnet not available, skipping syntax tests
+[0;34m[INFO][0m Testing configuration file content...
+[0;32m[SUCCESS][0m ✓ rootfs.jsonnet contains: vendor
+[0;32m[SUCCESS][0m ✓ rootfs.jsonnet contains: product
+[0;32m[SUCCESS][0m ✓ rootfs.jsonnet contains: version
+[0;31m[ERROR][0m ✗ rootfs.jsonnet missing: arch
+[0;32m[SUCCESS][0m ✓ rootfs.jsonnet contains: base_system
+[0;32m[SUCCESS][0m ✓ rootfs.jsonnet contains packages list
+[0;32m[SUCCESS][0m ✓ rootfs.jsonnet contains customize_hooks
+[0;32m[SUCCESS][0m ✓ image.jsonnet contains: image_name
+[0;32m[SUCCESS][0m ✓ image.jsonnet contains: image_size
+[0;32m[SUCCESS][0m ✓ image.jsonnet contains: partitions
+[0;32m[SUCCESS][0m ✓ image.jsonnet contains: filesystems
+[0;32m[SUCCESS][0m ✓ image.jsonnet contains UFS 4096 block size
+[0;34m[INFO][0m Testing hook scripts...
+[0;32m[SUCCESS][0m ✓ customize-hooks directory exists
+[0;32m[SUCCESS][0m ✓ Hook script exists: configure-shell.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: configure-shell.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: configure-shell.sh
+[0;32m[SUCCESS][0m ✓ Hook script exists: init-waydroid.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: init-waydroid.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: init-waydroid.sh
+[0;32m[SUCCESS][0m ✓ Hook script exists: kernel-params.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: kernel-params.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: kernel-params.sh
+[0;32m[SUCCESS][0m ✓ Hook script exists: setup-filesystem.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: setup-filesystem.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: setup-filesystem.sh
+[0;32m[SUCCESS][0m ✓ Hook script exists: setup-waydroid.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: setup-waydroid.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: setup-waydroid.sh
+[0;32m[SUCCESS][0m ✓ Hook script exists: setup-wayland.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: setup-wayland.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: setup-wayland.sh
+[0;32m[SUCCESS][0m ✓ Hook script exists: setup-zsh.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: setup-zsh.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: setup-zsh.sh
+[0;32m[SUCCESS][0m ✓ Hook script exists: ufs-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: ufs-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: ufs-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script exists: waydroid-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: waydroid-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: waydroid-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script exists: wayland-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: wayland-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: wayland-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script exists: zsh-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: zsh-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: zsh-service.sh
+[0;34m[INFO][0m Testing hook script content...
+[0;32m[SUCCESS][0m ✓ ZSH hook contains Oh My Zsh setup
+[0;32m[SUCCESS][0m ✓ Wayland hook contains Sway setup
+[0;32m[SUCCESS][0m ✓ Waydroid hook contains waydroid setup
+[0;32m[SUCCESS][0m ✓ Filesystem hook contains 4096 block size
+[0;34m[INFO][0m Testing GitHub Actions workflow...
+[0;32m[SUCCESS][0m ✓ GitHub Actions workflow file exists
+[1;33m[WARNING][0m yamllint not available, skipping YAML syntax test
+[0;32m[SUCCESS][0m ✓ GitHub Actions workflow contains: on:
+[0;32m[SUCCESS][0m ✓ GitHub Actions workflow contains: jobs:
+[0;32m[SUCCESS][0m ✓ GitHub Actions workflow contains: steps:
+[0;32m[SUCCESS][0m ✓ GitHub Actions workflow contains: runs-on:
+[0;34m[INFO][0m Testing build scripts...
+[0;32m[SUCCESS][0m ✓ Main build script exists
+[0;32m[SUCCESS][0m ✓ Main build script executable
+[0;32m[SUCCESS][0m ✓ Main build script syntax valid
+[0;32m[SUCCESS][0m ✓ Quick build script exists
+[0;32m[SUCCESS][0m ✓ Quick build script executable
+[0;32m[SUCCESS][0m ✓ Quick build script syntax valid
+[0;34m[INFO][0m === Test Results ===
+[0;34m[INFO][0m Total Tests: 69
+[0;32m[SUCCESS][0m Passed: 68
+[0;31m[ERROR][0m Failed: 1
+[0;31m[ERROR][0m Some tests failed!
+[0;34m[INFO][0m === Test Report ===
+[0;34m[INFO][0m Starting Radxa Cubie A7Z System Tests
+[0;34m[INFO][0m Initializing test environment...
+[0;32m[SUCCESS][0m Test environment initialized
+[0;34m[INFO][0m Running all tests...
+[0;34m[INFO][0m Testing project structure...
+[0;32m[SUCCESS][0m ✓ Directory exists: .github/workflows
+[0;32m[SUCCESS][0m ✓ Directory exists: customize-hooks
+[0;32m[SUCCESS][0m ✓ File exists: rootfs.jsonnet
+[0;32m[SUCCESS][0m ✓ File exists: image.jsonnet
+[0;32m[SUCCESS][0m ✓ File exists: build.sh
+[0;32m[SUCCESS][0m ✓ File exists: quick-build.sh
+[0;34m[INFO][0m Testing configuration files...
+[0;32m[SUCCESS][0m ✓ rootfs.jsonnet exists
+[0;32m[SUCCESS][0m ✓ image.jsonnet exists
+[1;33m[WARNING][0m jsonnet not available, skipping syntax tests
+[0;34m[INFO][0m Testing configuration file content...
+[0;32m[SUCCESS][0m ✓ rootfs.jsonnet contains: vendor
+[0;32m[SUCCESS][0m ✓ rootfs.jsonnet contains: product
+[0;32m[SUCCESS][0m ✓ rootfs.jsonnet contains: version
+[0;31m[ERROR][0m ✗ rootfs.jsonnet missing: arch
+[0;32m[SUCCESS][0m ✓ rootfs.jsonnet contains: base_system
+[0;32m[SUCCESS][0m ✓ rootfs.jsonnet contains packages list
+[0;32m[SUCCESS][0m ✓ rootfs.jsonnet contains customize_hooks
+[0;32m[SUCCESS][0m ✓ image.jsonnet contains: image_name
+[0;32m[SUCCESS][0m ✓ image.jsonnet contains: image_size
+[0;32m[SUCCESS][0m ✓ image.jsonnet contains: partitions
+[0;32m[SUCCESS][0m ✓ image.jsonnet contains: filesystems
+[0;32m[SUCCESS][0m ✓ image.jsonnet contains UFS 4096 block size
+[0;34m[INFO][0m Testing hook scripts...
+[0;32m[SUCCESS][0m ✓ customize-hooks directory exists
+[0;32m[SUCCESS][0m ✓ Hook script exists: configure-shell.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: configure-shell.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: configure-shell.sh
+[0;32m[SUCCESS][0m ✓ Hook script exists: init-waydroid.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: init-waydroid.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: init-waydroid.sh
+[0;32m[SUCCESS][0m ✓ Hook script exists: kernel-params.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: kernel-params.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: kernel-params.sh
+[0;32m[SUCCESS][0m ✓ Hook script exists: setup-filesystem.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: setup-filesystem.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: setup-filesystem.sh
+[0;32m[SUCCESS][0m ✓ Hook script exists: setup-waydroid.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: setup-waydroid.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: setup-waydroid.sh
+[0;32m[SUCCESS][0m ✓ Hook script exists: setup-wayland.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: setup-wayland.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: setup-wayland.sh
+[0;32m[SUCCESS][0m ✓ Hook script exists: setup-zsh.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: setup-zsh.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: setup-zsh.sh
+[0;32m[SUCCESS][0m ✓ Hook script exists: ufs-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: ufs-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: ufs-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script exists: waydroid-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: waydroid-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: waydroid-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script exists: wayland-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: wayland-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: wayland-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script exists: zsh-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: zsh-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: zsh-service.sh
+[0;34m[INFO][0m Testing hook script content...
+[0;32m[SUCCESS][0m ✓ ZSH hook contains Oh My Zsh setup
+[0;32m[SUCCESS][0m ✓ Wayland hook contains Sway setup
+[0;32m[SUCCESS][0m ✓ Waydroid hook contains waydroid setup
+[0;32m[SUCCESS][0m ✓ Filesystem hook contains 4096 block size
+[0;34m[INFO][0m Testing GitHub Actions workflow...
+[0;32m[SUCCESS][0m ✓ GitHub Actions workflow file exists
+[1;33m[WARNING][0m yamllint not available, skipping YAML syntax test
+[0;32m[SUCCESS][0m ✓ GitHub Actions workflow contains: on:
+[0;32m[SUCCESS][0m ✓ GitHub Actions workflow contains: jobs:
+[0;32m[SUCCESS][0m ✓ GitHub Actions workflow contains: steps:
+[0;32m[SUCCESS][0m ✓ GitHub Actions workflow contains: runs-on:
+[0;34m[INFO][0m Testing build scripts...
+[0;32m[SUCCESS][0m ✓ Main build script exists
+[0;32m[SUCCESS][0m ✓ Main build script executable
+[0;32m[SUCCESS][0m ✓ Main build script syntax valid
+[0;32m[SUCCESS][0m ✓ Quick build script exists
+[0;32m[SUCCESS][0m ✓ Quick build script executable
+[0;32m[SUCCESS][0m ✓ Quick build script syntax valid
+[0;34m[INFO][0m === Test Results ===
+[0;34m[INFO][0m Total Tests: 69
+[0;32m[SUCCESS][0m Passed: 68
+[0;31m[ERROR][0m Failed: 1
+[0;31m[ERROR][0m Some tests failed!
+[0;34m[INFO][0m === Test Report ===
+[0;34m[INFO][0m Starting Radxa Cubie A7Z System Tests
+[0;34m[INFO][0m Initializing test environment...
+[0;32m[SUCCESS][0m Test environment initialized
+[0;34m[INFO][0m Running all tests...
+[0;34m[INFO][0m Testing project structure...
+[0;32m[SUCCESS][0m ✓ Directory exists: .github/workflows
+[0;32m[SUCCESS][0m ✓ Directory exists: customize-hooks
+[0;32m[SUCCESS][0m ✓ File exists: rootfs.jsonnet
+[0;32m[SUCCESS][0m ✓ File exists: image.jsonnet
+[0;32m[SUCCESS][0m ✓ File exists: build.sh
+[0;32m[SUCCESS][0m ✓ File exists: quick-build.sh
+[0;34m[INFO][0m Testing configuration files...
+[0;32m[SUCCESS][0m ✓ rootfs.jsonnet exists
+[0;32m[SUCCESS][0m ✓ image.jsonnet exists
+[1;33m[WARNING][0m jsonnet not available, skipping syntax tests
+[0;34m[INFO][0m Testing configuration file content...
+[0;32m[SUCCESS][0m ✓ rootfs.jsonnet contains: vendor
+[0;32m[SUCCESS][0m ✓ rootfs.jsonnet contains: product
+[0;32m[SUCCESS][0m ✓ rootfs.jsonnet contains: version
+[0;32m[SUCCESS][0m ✓ rootfs.jsonnet contains: arch
+[0;32m[SUCCESS][0m ✓ rootfs.jsonnet contains: base_system
+[0;32m[SUCCESS][0m ✓ rootfs.jsonnet contains packages list
+[0;32m[SUCCESS][0m ✓ rootfs.jsonnet contains customize_hooks
+[0;32m[SUCCESS][0m ✓ image.jsonnet contains: image_name
+[0;32m[SUCCESS][0m ✓ image.jsonnet contains: image_size
+[0;32m[SUCCESS][0m ✓ image.jsonnet contains: partitions
+[0;32m[SUCCESS][0m ✓ image.jsonnet contains: filesystems
+[0;32m[SUCCESS][0m ✓ image.jsonnet contains UFS 4096 block size
+[0;34m[INFO][0m Testing hook scripts...
+[0;32m[SUCCESS][0m ✓ customize-hooks directory exists
+[0;32m[SUCCESS][0m ✓ Hook script exists: configure-shell.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: configure-shell.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: configure-shell.sh
+[0;32m[SUCCESS][0m ✓ Hook script exists: init-waydroid.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: init-waydroid.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: init-waydroid.sh
+[0;32m[SUCCESS][0m ✓ Hook script exists: kernel-params.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: kernel-params.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: kernel-params.sh
+[0;32m[SUCCESS][0m ✓ Hook script exists: setup-filesystem.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: setup-filesystem.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: setup-filesystem.sh
+[0;32m[SUCCESS][0m ✓ Hook script exists: setup-waydroid.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: setup-waydroid.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: setup-waydroid.sh
+[0;32m[SUCCESS][0m ✓ Hook script exists: setup-wayland.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: setup-wayland.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: setup-wayland.sh
+[0;32m[SUCCESS][0m ✓ Hook script exists: setup-zsh.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: setup-zsh.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: setup-zsh.sh
+[0;32m[SUCCESS][0m ✓ Hook script exists: ufs-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: ufs-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: ufs-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script exists: waydroid-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: waydroid-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: waydroid-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script exists: wayland-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: wayland-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: wayland-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script exists: zsh-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: zsh-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: zsh-service.sh
+[0;34m[INFO][0m Testing hook script content...
+[0;32m[SUCCESS][0m ✓ ZSH hook contains Oh My Zsh setup
+[0;32m[SUCCESS][0m ✓ Wayland hook contains Sway setup
+[0;32m[SUCCESS][0m ✓ Waydroid hook contains waydroid setup
+[0;32m[SUCCESS][0m ✓ Filesystem hook contains 4096 block size
+[0;34m[INFO][0m Testing GitHub Actions workflow...
+[0;32m[SUCCESS][0m ✓ GitHub Actions workflow file exists
+[1;33m[WARNING][0m yamllint not available, skipping YAML syntax test
+[0;32m[SUCCESS][0m ✓ GitHub Actions workflow contains: on:
+[0;32m[SUCCESS][0m ✓ GitHub Actions workflow contains: jobs:
+[0;32m[SUCCESS][0m ✓ GitHub Actions workflow contains: steps:
+[0;32m[SUCCESS][0m ✓ GitHub Actions workflow contains: runs-on:
+[0;34m[INFO][0m Testing build scripts...
+[0;32m[SUCCESS][0m ✓ Main build script exists
+[0;32m[SUCCESS][0m ✓ Main build script executable
+[0;32m[SUCCESS][0m ✓ Main build script syntax valid
+[0;32m[SUCCESS][0m ✓ Quick build script exists
+[0;32m[SUCCESS][0m ✓ Quick build script executable
+[0;32m[SUCCESS][0m ✓ Quick build script syntax valid
+[0;34m[INFO][0m === Test Results ===
+[0;34m[INFO][0m Total Tests: 69
+[0;32m[SUCCESS][0m Passed: 69
+[0;31m[ERROR][0m Failed: 0
+[0;32m[SUCCESS][0m All tests passed!
+[0;34m[INFO][0m === Test Report ===
+[0;34m[INFO][0m Starting Radxa Cubie A7Z System Tests
+[0;34m[INFO][0m Initializing test environment...
+[0;32m[SUCCESS][0m Test environment initialized
+[0;34m[INFO][0m Running all tests...
+[0;34m[INFO][0m Testing project structure...
+[0;32m[SUCCESS][0m ✓ Directory exists: .github/workflows
+[0;32m[SUCCESS][0m ✓ Directory exists: customize-hooks
+[0;32m[SUCCESS][0m ✓ File exists: rootfs.jsonnet
+[0;32m[SUCCESS][0m ✓ File exists: image.jsonnet
+[0;32m[SUCCESS][0m ✓ File exists: build.sh
+[0;32m[SUCCESS][0m ✓ File exists: quick-build.sh
+[0;34m[INFO][0m Testing configuration files...
+[0;32m[SUCCESS][0m ✓ rootfs.jsonnet exists
+[0;32m[SUCCESS][0m ✓ image.jsonnet exists
+[1;33m[WARNING][0m jsonnet not available, skipping syntax tests
+[0;34m[INFO][0m Testing configuration file content...
+[0;32m[SUCCESS][0m ✓ rootfs.jsonnet contains: vendor
+[0;32m[SUCCESS][0m ✓ rootfs.jsonnet contains: product
+[0;32m[SUCCESS][0m ✓ rootfs.jsonnet contains: version
+[0;32m[SUCCESS][0m ✓ rootfs.jsonnet contains: arch
+[0;32m[SUCCESS][0m ✓ rootfs.jsonnet contains: base_system
+[0;32m[SUCCESS][0m ✓ rootfs.jsonnet contains packages list
+[0;32m[SUCCESS][0m ✓ rootfs.jsonnet contains customize_hooks
+[0;32m[SUCCESS][0m ✓ image.jsonnet contains: image_name
+[0;32m[SUCCESS][0m ✓ image.jsonnet contains: image_size
+[0;32m[SUCCESS][0m ✓ image.jsonnet contains: partitions
+[0;32m[SUCCESS][0m ✓ image.jsonnet contains: filesystems
+[0;32m[SUCCESS][0m ✓ image.jsonnet contains UFS 4096 block size
+[0;34m[INFO][0m Testing hook scripts...
+[0;32m[SUCCESS][0m ✓ customize-hooks directory exists
+[0;32m[SUCCESS][0m ✓ Hook script exists: configure-shell.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: configure-shell.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: configure-shell.sh
+[0;32m[SUCCESS][0m ✓ Hook script exists: init-waydroid.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: init-waydroid.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: init-waydroid.sh
+[0;32m[SUCCESS][0m ✓ Hook script exists: kernel-params.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: kernel-params.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: kernel-params.sh
+[0;32m[SUCCESS][0m ✓ Hook script exists: setup-filesystem.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: setup-filesystem.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: setup-filesystem.sh
+[0;32m[SUCCESS][0m ✓ Hook script exists: setup-waydroid.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: setup-waydroid.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: setup-waydroid.sh
+[0;32m[SUCCESS][0m ✓ Hook script exists: setup-wayland.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: setup-wayland.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: setup-wayland.sh
+[0;32m[SUCCESS][0m ✓ Hook script exists: setup-zsh.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: setup-zsh.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: setup-zsh.sh
+[0;32m[SUCCESS][0m ✓ Hook script exists: ufs-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: ufs-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: ufs-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script exists: waydroid-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: waydroid-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: waydroid-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script exists: wayland-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: wayland-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: wayland-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script exists: zsh-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script executable: zsh-service.sh
+[0;32m[SUCCESS][0m ✓ Hook script syntax valid: zsh-service.sh
+[0;34m[INFO][0m Testing hook script content...
+[0;32m[SUCCESS][0m ✓ ZSH hook contains Oh My Zsh setup
+[0;32m[SUCCESS][0m ✓ Wayland hook contains Sway setup
+[0;32m[SUCCESS][0m ✓ Waydroid hook contains waydroid setup
+[0;32m[SUCCESS][0m ✓ Filesystem hook contains 4096 block size
+[0;34m[INFO][0m Testing GitHub Actions workflow...
+[0;32m[SUCCESS][0m ✓ GitHub Actions workflow file exists
+[1;33m[WARNING][0m yamllint not available, skipping YAML syntax test
+[0;32m[SUCCESS][0m ✓ GitHub Actions workflow contains: on:
+[0;32m[SUCCESS][0m ✓ GitHub Actions workflow contains: jobs:
+[0;32m[SUCCESS][0m ✓ GitHub Actions workflow contains: steps:
+[0;32m[SUCCESS][0m ✓ GitHub Actions workflow contains: runs-on:
+[0;34m[INFO][0m Testing build scripts...
+[0;32m[SUCCESS][0m ✓ Main build script exists
+[0;32m[SUCCESS][0m ✓ Main build script executable
+[0;32m[SUCCESS][0m ✓ Main build script syntax valid
+[0;32m[SUCCESS][0m ✓ Quick build script exists
+[0;32m[SUCCESS][0m ✓ Quick build script executable
+[0;32m[SUCCESS][0m ✓ Quick build script syntax valid
+[0;34m[INFO][0m === Test Results ===
+[0;34m[INFO][0m Total Tests: 69
+[0;32m[SUCCESS][0m Passed: 69
+[0;31m[ERROR][0m Failed: 0
+[0;32m[SUCCESS][0m All tests passed!
+[0;34m[INFO][0m === Test Report ===

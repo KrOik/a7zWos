@@ -1,0 +1,344 @@
+# Waydroid支持包
+# 包含Waydroid容器运行所需的所有依赖包
+
+# Waydroid核心包
+waydroid
+waydroid-data
+waydroid-common
+waydroid-image-manager
+
+# 容器支持
+lxc
+lxc-templates
+lxc-utils
+lxcfs
+liblxc1
+lxc-dev
+
+# Android支持
+android-libbase
+android-liblog
+android-libbacktrace
+android-libunwind
+android-libutils
+android-libcrypto
+android-libcutils
+
+# 内核模块支持
+linux-headers-generic
+linux-headers-arm64
+linux-headers-5.15-arm64
+
+# Binder驱动支持
+binder-utils
+binder-linux-headers
+
+# Ashmem驱动支持
+ashmem-utils
+ashmem-linux-headers
+
+# 网络桥接
+bridge-utils
+libbridge-utils
+
+# DNS支持
+dnsmasq
+dnsmasq-base
+libdnsmasq-base
+
+# DHCP支持
+isc-dhcp-client
+isc-dhcp-common
+isc-dhcp-server
+
+# 网络工具
+iptables
+iptables-persistent
+netfilter-persistent
+conntrack
+conntrackd
+
+# 容器网络
+cni-plugins
+cni-plugin-flannel
+cni-plugin-bridge
+cni-plugin-host-local
+cni-plugin-portmap
+cni-plugin-tuning
+
+# 容器运行时
+runc
+containerd
+cri-tools
+
+# 容器工具
+podman
+buildah
+skopeo
+
+# 镜像工具
+squashfs-tools
+squashfuse
+fuse-overlayfs
+
+# 文件系统支持
+btrfs-progs
+btrfs-tools
+xfsprogs
+
+# 挂载工具
+mount
+util-linux
+libmount1
+
+# 权限管理
+policykit-1
+policykit-1-gnome
+
+# 用户命名空间支持
+uidmap
+subuid
+subgid
+
+# 安全模块
+apparmor
+apparmor-utils
+apparmor-profiles
+apparmor-profiles-extra
+
+# SELinux支持
+selinux-utils
+selinux-basics
+policycoreutils
+
+# 审计支持
+auditd
+libaudit1
+
+# 日志支持
+rsyslog
+systemd-journal-remote
+
+# 进程管理
+systemd
+systemd-sysv
+libsystemd0
+
+# 设备管理
+udev
+libudev1
+
+# 网络管理
+network-manager
+network-manager-gnome
+
+# 时间同步
+systemd-timesyncd
+ntp
+
+# 容器存储
+lvm2
+thin-provisioning-tools
+
+# 容器监控
+cadvisor
+cgroupfs-mount
+cgroup-lite
+
+# 容器调试
+strace
+ltrace
+gdb
+
+# 容器网络调试
+netstat-nat
+netstat-graphics
+
+# 容器文件系统调试
+debugfs
+stat
+file
+
+# 容器进程调试
+procps
+psmisc
+lsof
+
+# 容器日志调试
+journalctl
+systemd-cat
+
+# Android工具
+adb
+fastboot
+android-tools-adb
+android-tools-fastboot
+android-tools-fsutils
+
+# Android调试
+android-sdk-platform-tools
+android-sdk-build-tools
+
+# Android模拟器
+qemu-user-static
+qemu-system-arm
+qemu-utils
+
+# Android支持库
+libandroid-properties1
+libandroid-properties-dev
+
+# Android运行时
+android-runtime
+android-libc
+android-libm
+
+# Waydroid特定依赖
+python3-gbinder
+python3-gbinder-dev
+libgbinder-dev
+libgbinder1
+
+# Python支持
+python3
+python3-pip
+python3-dev
+python3-setuptools
+python3-wheel
+
+# Python Android支持
+python3-android-tools
+python3-adb
+python3-fastboot
+
+# 图形支持
+mesa-utils
+libgl1-mesa-dri
+libgl1-mesa-glx
+libgles2-mesa
+libegl1-mesa
+
+# Wayland支持
+wayland-protocols
+libwayland-client0
+libwayland-server0
+libwayland-egl1
+
+# X11支持 (用于XWayland)
+xserver-xorg-core
+xserver-xorg-video-all
+xserver-xorg-input-all
+xwayland
+
+# 输入支持
+libinput10
+libinput-dev
+libevdev2
+libevdev-dev
+
+# 音频支持
+pulseaudio
+pulseaudio-utils
+pavucontrol
+alsa-utils
+
+# 摄像头支持
+v4l-utils
+libv4l-0
+libv4lconvert0
+
+# 传感器支持
+iio-utils
+libiio-dev
+
+# GPS支持
+gpsd
+gpsd-clients
+libgps23
+
+# NFC支持
+libnfc6
+libnfc-dev
+nfc-tools
+
+# 无线支持
+wireless-tools
+wpasupplicant
+iw
+
+# USB支持
+usbutils
+libusb-1.0-0
+libusb-1.0-0-dev
+
+# 串口支持
+minicom
+screen
+
+# 调试工具
+gdb
+gdbserver
+strace
+ltrace
+valgrind
+
+# 网络调试
+tcpdump
+wireshark
+nmap
+netcat
+
+# 系统信息
+lshw
+lscpu
+lsusb
+lspci
+
+# 性能监控
+htop
+top
+iotop
+nethogs
+
+# 文件系统工具
+ntfs-3g
+exfat-fuse
+exfat-utils
+
+# 压缩工具
+unzip
+zip
+tar
+gzip
+bzip2
+xz-utils
+
+# 文本处理
+vim
+nano
+less
+more
+grep
+sed
+awk
+
+# 网络客户端
+curl
+wget
+aria2
+
+# 版本控制
+git
+
+# 构建工具
+make
+cmake
+gcc
+g++
+build-essential
+
+# 库开发
+libtool
+autoconf
+automake
+pkg-config

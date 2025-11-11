@@ -1,0 +1,29 @@
+FROM m.daocloud.io/library/debian:bookworm-slim
+
+RUN apt-get update && apt-get install -y \
+    debootstrap \
+    qemu-user-static \
+    debian-archive-keyring \
+    gnupg \
+    wget \
+    curl \
+    git \
+    make \
+    parted \
+    dosfstools \
+    e2fsprogs \
+    jq \
+    python3 \
+    python3-pip \
+    rsync \
+    squashfs-tools \
+    zip \
+    unzip \
+    xz-utils \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip3 install jsonnet
+
+WORKDIR /workspace
+
+CMD ["/bin/bash"]
