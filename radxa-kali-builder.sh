@@ -196,67 +196,8 @@ install_dependencies() {
 
 # Setup Kali repositories
 setup_kali_repositories() {
-    log_info "Setting up Kali repositories..."
-    
-    # Create required directories
-    local SOURCES_DIR="/etc/apt/sources.list.d"
-    local KEYRINGS_DIR="/etc/apt/keyrings"
-    mkdir -p "$SOURCES_DIR"
-    mkdir -p "$KEYRINGS_DIR"
-
-    # Ensure gnupg and certificates
-    if ! dpkg -l | grep -q "^ii.*gnupg"; then
-        apt-get install -y --no-install-recommends gnupg || log_warning "Installing gnupg failed"
-    fi
-    if ! dpkg -l | grep -q "^ii.*ca-certificates"; then
-        apt-get install -y --no-install-recommends ca-certificates || log_warning "Installing ca-certificates failed"
-    fi
-
-    # Import Kali repo key
-    if [[ ! -f "$KEYRINGS_DIR/kali-archive-keyring.gpg" ]]; then
-        if curl -fsSL https://archive.kali.org/archive-key.asc | gpg --dearmor -o "$KEYRINGS_DIR/kali-archive-keyring.gpg"; then
-            log_success "Imported Kali repository key"
-        else
-            log_error "Failed to import Kali repository key"
-            return 1
-        fi
-    fi
-
-    # Normalize Radxa keyring path
-    if [[ -f "$KEYRINGS_DIR/radxa-archive-keyring.gpg" && ! -s "$KEYRINGS_DIR/radxa-archive-keyring.gpg" ]]; then
-        rm -f "$KEYRINGS_DIR/radxa-archive-keyring.gpg"
-    fi
-    local RADXA_KEYRING=""
-    if [[ -e /usr/share/keyrings/radxa-archive-keyring.gpg ]]; then
-        RADXA_KEYRING="/usr/share/keyrings/radxa-archive-keyring.gpg"
-    elif [[ -s "$KEYRINGS_DIR/radxa-archive-keyring.gpg" ]]; then
-        RADXA_KEYRING="$KEYRINGS_DIR/radxa-archive-keyring.gpg"
-    else
-        log_warning "Radxa keyring not found; skipping Radxa repository"
-    fi
-
-    # Write sources.list entries
-    cat > "$SOURCES_DIR/kali.list" << 'EOF'
-deb [signed-by=/etc/apt/keyrings/kali-archive-keyring.gpg] http://http.kali.org/kali kali-rolling main non-free contrib
-deb-src [signed-by=/etc/apt/keyrings/kali-archive-keyring.gpg] http://http.kali.org/kali kali-rolling main non-free contrib
-EOF
-
-    # Write Radxa repo if key is available and not present
-    if [[ -n "$RADXA_KEYRING" ]]; then
-        if ! grep -Rqs "radxa-repo.github.io/bullseye" "$SOURCES_DIR"; then
-            cat > "$SOURCES_DIR/radxa.list" << EOF
-deb [signed-by=${RADXA_KEYRING}] https://radxa-repo.github.io/bullseye bullseye main
-EOF
-        else
-            log_info "Radxa bullseye repository already present; skipping"
-        fi
-    fi
-
-    apt-get update || {
-        log_error "Failed to update APT sources"
-        return 1
-    }
-    log_success "Kali repositories configured"
+    log_info "Skipping host APT repo changes; using Kali mirrors inside live-build"
+    log_success "Repository setup delegated to live-build configuration"
 }
 
 # Clone RadxaOS SDK
