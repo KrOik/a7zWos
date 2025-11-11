@@ -1,0 +1,24 @@
+#!/bin/bash
+
+echo "=== Radxa硬件初始化 ==="
+
+# 安装Radxa特定包
+apt-get install -y firmware-realtek firmware-atheros firmware-brcm80211
+apt-get install -y firmware-libertas firmware-misc-nonfree radxa-system-config
+
+# 配置设备树
+cp /usr/lib/linux-image-*/allwinner/a733-cubie-a7z.dtb /boot/
+
+# 配置GPIO支持
+apt-get install -y libmraa-dev python3-mraa
+
+# 配置I2C支持
+echo "i2c-dev" >> /etc/modules-load.d/radxa.conf
+
+# 配置SPI支持  
+echo "spidev" >> /etc/modules-load.d/radxa.conf
+
+# 设置硬件权限
+usermod -a -G gpio,dialout,i2c,spi kali
+
+echo "Radxa硬件初始化完成"

@@ -70,23 +70,25 @@ show_system_info() {
 
 # 检查网络连接
 check_network() {
-    # log_info "检查网络连接..."
-    
-    # local sites=(
-    #     "http.kali.org"
-    #     "github.com"
-    #     "radxa-repo.github.io"
-    # )
-    
-    # for site in "${sites[@]}"; do
-    #     if ping -c 1 "$site" &> /dev/null; then
-    #         log_success "✓ $site 可访问"
-    #     else
-    #         log_error "✗ $site 无法访问"
-    #         return 1
-    #     fi
-    # done
-    
+    log_info "检查网络连接..."
+    local urls=(
+        "http://http.kali.org/"
+        "https://archive.kali.org/archive-key.asc"
+        "https://radxa-repo.github.io/bullseye/"
+        "https://github.com/"
+    )
+    local ok=0
+    for u in "${urls[@]}"; do
+        if curl -fsSL --connect-timeout 5 --max-time 10 "$u" -o /dev/null; then
+            log_success "✓ 可访问: $u"
+            ok=1
+            break
+        fi
+    done
+    if [[ $ok -eq 0 ]]; then
+        log_error "✗ 无法通过HTTP访问必要地址"
+        return 1
+    fi
     return 0
 }
 

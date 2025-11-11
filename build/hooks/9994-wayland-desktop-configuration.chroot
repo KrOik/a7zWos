@@ -1,0 +1,108 @@
+#!/bin/bash
+
+echo "=== Wayland桌面配置 ==="
+
+# 安装Wayland compositor
+apt-get install -y wayland-protocols libwayland-client0 weston sway waybar wofi foot
+
+# 安装XFCE for Wayland
+apt-get install -y xfce4 xfce4-goodies xfce4-panel thunar gtk3-engines-xfce
+
+# 配置Sway compositor
+cat > /etc/sway/config << 'SWAY_EOF'
+# Sway配置 - 适用于Radxa Kali
+set $mod Mod4
+
+# 基本配置
+output * bg /usr/share/backgrounds/kali/kali-linux.png fill
+xwayland enable
+
+# 快捷键
+bindsym $mod+Return exec foot
+bindsym $mod+Shift+q kill
+bindsym $mod+d exec wofi --show drun
+bindsym $mod+Shift+e exec swaynag -t warning -m '退出Sway?' -b '是' 'swaymsg exit'
+
+# 工作区
+bindsym $mod+1 workspace number 1
+bindsym $mod+2 workspace number 2
+bindsym $mod+3 workspace number 3
+bindsym $mod+4 workspace number 4
+
+# 窗口管理
+floating_modifier $mod
+bindsym $mod+h focus left
+bindsym $mod+j focus down
+bindsym $mod+k focus up
+bindsym $mod+l focus right
+
+# 启动应用
+exec waybar
+exec nm-applet
+SWAY_EOF
+
+# 配置Waybar
+cat > /etc/waybar/config << 'WAYBAR_EOF'
+{
+    "layer": "top",
+    "position": "top",
+    "height": 30,
+    "modules-left": ["sway/workspaces", "sway/mode"],
+    "modules-center": ["sway/window"],
+    "modules-right": ["network", "cpu", "memory", "battery", "clock", "tray"],
+    
+    "network": {
+        "format": "{icon} {essid}",
+        "format-icons": ["󰤯", "󰤟", "󰤢", "󰤥", "󰤨"]
+    },
+    
+    "cpu": {
+        "format": "CPU: {usage}%",
+        "tooltip": false
+    },
+    
+    "memory": {
+        "format": "MEM: {percentage}%",
+        "tooltip": false
+    },
+    
+    "battery": {
+        "format": "{icon} {capacity}%",
+        "format-icons": ["󰂃", "󰁻", "󰁽", "󰁿", "󰁹"]
+    },
+    
+    "clock": {
+        "format": "{:%Y-%m-%d %H:%M}",
+        "tooltip": false
+    }
+}
+WAYBAR_EOF
+
+# 创建启动脚本
+cat > /usr/local/bin/start-wayland.sh << 'START_EOF'
+#!/bin/bash
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+export WAYLAND_DISPLAY=wayland-0
+export XWAYLAND_ENABLE=1
+export XWAYLAND_GLAMOR=1
+
+# 启动Sway
+exec sway
+START_EOF
+
+cat > /usr/local/bin/start-xfce-wayland.sh << 'XFCE_START_EOF'
+#!/bin/bash
+export GDK_BACKEND=wayland
+export CLUTTER_BACKEND=wayland
+export XDG_SESSION_TYPE=wayland
+
+# 启动XFCE Wayland会话
+exec dbus-run-session startxfce4
+XFCE_START_EOF
+
+chmod +x /usr/local/bin/start-wayland.sh /usr/local/bin/start-xfce-wayland.sh
+
+# 兼容性库
+apt-get install -y xwayland qtwayland5 qt5-qpa-plugin-wayland gtk-layer-shell libgtk-3-0
+
+echo "Wayland桌面配置完成"

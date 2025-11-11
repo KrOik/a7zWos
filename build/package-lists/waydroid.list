@@ -1,0 +1,7 @@
+# Waydroid Android容器支持
+waydroid
+python3-gbinder
+lxc
+cgroupfs-mount
+bridge-utils
+iptables

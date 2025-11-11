@@ -1,0 +1,9 @@
+# Radxa硬件支持包
+firmware-realtek
+firmware-atheros
+firmware-brcm80211
+firmware-libertas
+firmware-misc-nonfree
+radxa-system-config
+libmraa-dev
+python3-mraa

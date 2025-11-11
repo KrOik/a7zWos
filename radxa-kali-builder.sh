@@ -73,9 +73,21 @@ check_requirements() {
         log_warning "内存小于4GB，构建可能较慢"
     fi
     
-    # 检查网络连接
-    if ! ping -c 1 http.kali.org &> /dev/null; then
-        log_error "无法连接到Kali仓库，请检查网络连接"
+    # 检查网络连接（使用HTTP而非ping，避免被禁）
+    local urls=(
+        "http://http.kali.org/"
+        "https://archive.kali.org/archive-key.asc"
+        "https://radxa-repo.github.io/bullseye/"
+    )
+    local http_ok=0
+    for u in "${urls[@]}"; do
+        if curl -fsSL --connect-timeout 5 --max-time 10 "$u" -o /dev/null; then
+            http_ok=1
+            break
+        fi
+    done
+    if [[ $http_ok -eq 0 ]]; then
+        log_error "网络不可用：无法通过HTTP访问必要的仓库地址"
         exit 1
     fi
     
@@ -85,6 +97,19 @@ check_requirements() {
 # 安装构建依赖
 install_dependencies() {
     log_info "安装构建依赖..."
+    
+    # 避免交互式提示阻塞安装
+    export DEBIAN_FRONTEND=noninteractive
+    
+    # 若系统尚未启用 merged-/usr，先安装 usrmerge，避免 base-files 升级失败
+    if [[ -d /bin && ! -L /bin ]]; then
+        if ! dpkg -l | grep -q "^ii.*usrmerge"; then
+            log_info "检测到未合并的 /usr，先安装 usrmerge"
+            apt-get install -y --no-install-recommends usrmerge || {
+                log_warning "安装 usrmerge 失败，后续安装可能出错"
+            }
+        fi
+    fi
     
     apt-get update
     
@@ -130,7 +155,8 @@ install_dependencies() {
         "nilfs-tools"
         "gparted"
         "testdisk"
-        "photorec"
+        "gnupg"
+        "ca-certificates"
     )
     
     for dep in "${deps[@]}"; do
@@ -147,31 +173,63 @@ install_dependencies() {
 setup_kali_repositories() {
     log_info "设置Kali仓库..."
     
-    # 创建sources.list.d目录
+    # 创建必要目录
     mkdir -p /etc/apt/sources.list.d
-    
-    # 添加Kali仓库
+    mkdir -p /etc/apt/keyrings
+
+    # 确保密钥工具与证书
+    if ! dpkg -l | grep -q "^ii.*gnupg"; then
+        apt-get install -y --no-install-recommends gnupg || log_warning "安装 gnupg 失败"
+    fi
+    if ! dpkg -l | grep -q "^ii.*ca-certificates"; then
+        apt-get install -y --no-install-recommends ca-certificates || log_warning "安装 ca-certificates 失败"
+    fi
+
+    # 导入Kali仓库密钥到keyrings
+    if [[ ! -f /etc/apt/keyrings/kali-archive-keyring.gpg ]]; then
+        if curl -fsSL https://archive.kali.org/archive-key.asc | gpg --dearmor -o /etc/apt/keyrings/kali-archive-keyring.gpg; then
+            log_success "Kali仓库密钥导入完成"
+        else
+            log_error "Kali仓库密钥导入失败"
+            return 1
+        fi
+    fi
+
+    # 统一Radxa密钥路径（优先使用系统已有的 /usr/share/keyrings）
+    # 清理可能存在的空文件，避免导致APT冲突
+    if [[ -f /etc/apt/keyrings/radxa-archive-keyring.gpg && ! -s /etc/apt/keyrings/radxa-archive-keyring.gpg ]]; then
+        rm -f /etc/apt/keyrings/radxa-archive-keyring.gpg
+    fi
+    local RADXA_KEYRING=""
+    if [[ -e /usr/share/keyrings/radxa-archive-keyring.gpg ]]; then
+        RADXA_KEYRING="/usr/share/keyrings/radxa-archive-keyring.gpg"
+    elif [[ -s /etc/apt/keyrings/radxa-archive-keyring.gpg ]]; then
+        RADXA_KEYRING="/etc/apt/keyrings/radxa-archive-keyring.gpg"
+    else
+        log_warning "未检测到 Radxa 密钥环，将跳过写入 Radxa 源"
+    fi
+
+    # 写入sources.list，使用signed-by指向keyrings
     cat > /etc/apt/sources.list.d/kali.list << 'EOF'
-deb http://http.kali.org/kali kali-rolling main non-free contrib
-deb-src http://http.kali.org/kali kali-rolling main non-free contrib
+deb [signed-by=/etc/apt/keyrings/kali-archive-keyring.gpg] http://http.kali.org/kali kali-rolling main non-free contrib
+deb-src [signed-by=/etc/apt/keyrings/kali-archive-keyring.gpg] http://http.kali.org/kali kali-rolling main non-free contrib
 EOF
-    
-    # 添加Kali GPG密钥
-    if ! apt-key list | grep -q "Kali"; then
-        wget -q -O - https://archive.kali.org/archive-key.asc | apt-key add -
-    fi
-    
-    # 添加Radxa仓库（保持兼容性）
-    cat > /etc/apt/sources.list.d/radxa.list << 'EOF'
-deb https://radxa-repo.github.io/bullseye bullseye main
+
+    # 写入 Radxa 源（若系统不存在同源定义且有可用密钥）
+    if [[ -n "$RADXA_KEYRING" ]]; then
+        if ! grep -Rqs "radxa-repo.github.io/bullseye" /etc/apt/sources.list.d; then
+            cat > /etc/apt/sources.list.d/radxa.list << EOF
+deb [signed-by=${RADXA_KEYRING}] https://radxa-repo.github.io/bullseye bullseye main
 EOF
-    
-    # 添加Radxa GPG密钥
-    if ! apt-key list | grep -q "Radxa"; then
-        wget -q -O - https://radxa-repo.github.io/bullseye/public.key | apt-key add -
+        else
+            log_info "系统已存在 Radxa bullseye 源，跳过写入"
+        fi
     fi
-    
-    apt-get update
+
+    apt-get update || {
+        log_error "APT源更新失败"
+        return 1
+    }
     log_success "Kali仓库设置完成"
 }
 
@@ -783,11 +841,9 @@ build_system() {
         --iso-application "Kali Linux for Radxa Cubie A7Z" \
         --zsync false \
         --jffs2 false \
-        --tar false \
         --checksums md5 \
         --chroot-filesystem squashfs \
         --compression xz \
-        --compression-level 9 \
         --firmware-binary true \
         --firmware-chroot true \
         --swap-file-path /live-swap \

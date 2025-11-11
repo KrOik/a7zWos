@@ -1,9 +1,27 @@
-构建开始于: Tue 11 Nov 2025 12:39:45 PM UTC
-[0;34m[INFO][0m 生成配置文件...
-[0;32m[SUCCESS][0m 配置文件生成完成
-[0;34m[INFO][0m 生成钩子脚本...
-[0;32m[SUCCESS][0m 钩子脚本生成完成
-[0;34m[INFO][0m 生成包列表...
-[0;32m[SUCCESS][0m 包列表生成完成
-[0;32m[SUCCESS][0m 所有任务完成！
-构建结束于: Tue 11 Nov 2025 12:40:04 PM UTC
+构建开始于: Tue 11 Nov 2025 02:02:51 PM UTC
+[0;34m[INFO][0m 安装构建依赖...
+[0;34m[INFO][0m 检测到未合并的 /usr，先安装 usrmerge
+[1;33m[WARNING][0m 安装 usrmerge 失败，后续安装可能出错
+[0;34m[INFO][0m 安装依赖: git
+[1;33m[WARNING][0m 安装 git 失败
+[0;34m[INFO][0m 安装依赖: curl
+[1;33m[WARNING][0m 安装 curl 失败
+[0;34m[INFO][0m 安装依赖: build-essential
+[1;33m[WARNING][0m 安装 build-essential 失败
+[0;34m[INFO][0m 安装依赖: debootstrap
+[1;33m[WARNING][0m 安装 debootstrap 失败
+[0;34m[INFO][0m 安装依赖: live-build
+[1;33m[WARNING][0m 安装 live-build 失败
+[0;34m[INFO][0m 安装依赖: jq
+[1;33m[WARNING][0m 安装 jq 失败
+[0;34m[INFO][0m 安装依赖: python3
+[1;33m[WARNING][0m 安装 python3 失败
+[0;34m[INFO][0m 安装依赖: python3-pip
+[0;34m[INFO][0m 安装依赖: qemu-user-static
+[0;34m[INFO][0m 安装依赖: binfmt-support
+[1;33m[WARNING][0m 安装 binfmt-support 失败
+[0;34m[INFO][0m 安装依赖: docker.io
+[1;33m[WARNING][0m 安装 docker.io 失败
+[0;34m[INFO][0m 安装依赖: debootstrap
+[1;33m[WARNING][0m 安装 debootstrap 失败
+[0;34m[INFO][0m 安装依赖: arch-test
