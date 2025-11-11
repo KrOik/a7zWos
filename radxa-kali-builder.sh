@@ -1,13 +1,13 @@
 #!/bin/bash
 
-# Radxa Cubie A7Z Kali Linux 构建系统
-# 基于RadxaOS SDK和Kali metapackages的完整构建方案
-# 作者: KrNormyDev
-# 版本: 1.0.0
+# Radxa Cubie A7Z Kali Linux build system
+# Complete build based on RadxaOS SDK and Kali metapackages
+# Author: KrNormyDev
+# Version: 1.0.0
 
 set -euo pipefail
 
-# 全局变量
+# Globals
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOG_FILE="${SCRIPT_DIR}/build.log"
 VENDOR="KrNormyDev"
@@ -16,14 +16,14 @@ VERSION="1.0.0"
 ARCH="arm64"
 DISTRIBUTION="kali-rolling"
 
-# 颜色定义
+# Color definitions
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# 日志函数
+# Logging functions
 log_info() {
     echo -e "${BLUE}[INFO]${NC} $1" | tee -a "$LOG_FILE"
 }
@@ -40,40 +40,73 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1" | tee -a "$LOG_FILE"
 }
 
-# 错误处理
-trap 'log_error "构建在第 $LINENO 行失败"; exit 1' ERR
+# Command helpers
+run_cmd() {
+    # Usage: run_cmd "<command>" "<description>"
+    local cmd="$1"; shift || true
+    local desc="${1:-Command}"
+    log_info "${desc}: ${cmd}"
+    bash -c "$cmd" || {
+        log_error "Failed: ${desc}"
+        return 1
+    }
+}
 
-# 检查root权限
+run_with_retry() {
+    # Usage: run_with_retry <retries> <delay_seconds> "<command>" "<description>"
+    local retries="$1"; local delay="$2"; shift 2
+    local cmd="$1"; shift || true
+    local desc="${1:-Command}"
+    local attempt=1
+    while true; do
+        if bash -c "$cmd"; then
+            log_success "${desc} succeeded"
+            return 0
+        fi
+        if (( attempt >= retries )); then
+            log_error "${desc} failed after ${attempt} attempts"
+            return 1
+        fi
+        log_warning "${desc} failed (attempt ${attempt}/${retries}); retrying in ${delay}s..."
+        sleep "$delay"
+        ((attempt++))
+    done
+}
+
+# Error handling
+trap 'log_error "Build failed at line $LINENO"; exit 1' ERR
+
+# Root privilege check
 check_root() {
     if [[ $EUID -ne 0 ]]; then
-        log_error "此脚本需要root权限运行"
+        log_error "This script requires root privileges"
         exit 1
     fi
 }
 
-# 检查系统要求
+# System requirements check
 check_requirements() {
-    log_info "检查系统要求..."
+    log_info "Checking system requirements..."
     
-    # 检查架构
+    # Check architecture
     if [[ "$(uname -m)" != "aarch64" ]]; then
-        log_warning "当前架构不是ARM64，某些功能可能受限"
+        log_warning "Current architecture is not ARM64; some features may be limited"
     fi
     
-    # 检查磁盘空间
+    # Check disk space
     local disk_space=$(df -BG . | awk 'NR==2 {print $4}' | sed 's/G//')
     if [[ $disk_space -lt 20 ]]; then
-        log_error "磁盘空间不足，需要至少20GB可用空间"
+        log_error "Insufficient disk space: need at least 20GB free"
         exit 1
     fi
     
-    # 检查内存
+    # Check memory
     local memory=$(free -g | awk 'NR==2 {print $2}')
     if [[ $memory -lt 4 ]]; then
-        log_warning "内存小于4GB，构建可能较慢"
+        log_warning "Memory is less than 4GB; build might be slow"
     fi
     
-    # 检查网络连接（使用HTTP而非ping，避免被禁）
+    # Check network connectivity (HTTP-based)
     local urls=(
         "http://http.kali.org/"
         "https://archive.kali.org/archive-key.asc"
@@ -87,31 +120,21 @@ check_requirements() {
         fi
     done
     if [[ $http_ok -eq 0 ]]; then
-        log_error "网络不可用：无法通过HTTP访问必要的仓库地址"
+        log_error "Network unavailable: cannot access required repositories via HTTP"
         exit 1
     fi
     
-    log_success "系统要求检查完成"
+    log_success "System requirements check passed"
 }
 
-# 安装构建依赖
+# Install build dependencies
 install_dependencies() {
-    log_info "安装构建依赖..."
+    log_info "Installing build dependencies..."
     
-    # 避免交互式提示阻塞安装
+    # Avoid interactive prompts
     export DEBIAN_FRONTEND=noninteractive
     
-    # 若系统尚未启用 merged-/usr，先安装 usrmerge，避免 base-files 升级失败
-    if [[ -d /bin && ! -L /bin ]]; then
-        if ! dpkg -l | grep -q "^ii.*usrmerge"; then
-            log_info "检测到未合并的 /usr，先安装 usrmerge"
-            apt-get install -y --no-install-recommends usrmerge || {
-                log_warning "安装 usrmerge 失败，后续安装可能出错"
-            }
-        fi
-    fi
-    
-    apt-get update
+    run_with_retry 3 3 "apt-get update" "apt-get update"
     
     local deps=(
         "git"
@@ -126,7 +149,6 @@ install_dependencies() {
         "qemu-user-static"
         "binfmt-support"
         "docker.io"
-        "debootstrap"
         "arch-test"
         "dosfstools"
         "mtools"
@@ -159,135 +181,143 @@ install_dependencies() {
         "ca-certificates"
     )
     
+    local failed_pkgs=()
     for dep in "${deps[@]}"; do
         if ! dpkg -l | grep -q "^ii.*$dep"; then
-            log_info "安装依赖: $dep"
-            apt-get install -y "$dep" || log_warning "安装 $dep 失败"
+            log_info "Installing dependency: $dep"
+            if ! run_with_retry 2 5 "apt-get install -y $dep" "apt-get install $dep"; then
+                failed_pkgs+=("$dep")
+            fi
         fi
     done
+    if (( ${#failed_pkgs[@]} > 0 )); then
+        log_error "Failed to install packages: ${failed_pkgs[*]}"
+        return 1
+    fi
     
-    log_success "构建依赖安装完成"
+    log_success "Build dependencies installation completed"
 }
 
-# 设置Kali仓库
+# Setup Kali repositories
 setup_kali_repositories() {
-    log_info "设置Kali仓库..."
+    log_info "Setting up Kali repositories..."
     
-    # 创建必要目录
-    mkdir -p /etc/apt/sources.list.d
-    mkdir -p /etc/apt/keyrings
+    # Create required directories
+    local SOURCES_DIR="/etc/apt/sources.list.d"
+    local KEYRINGS_DIR="/etc/apt/keyrings"
+    mkdir -p "$SOURCES_DIR"
+    mkdir -p "$KEYRINGS_DIR"
 
-    # 确保密钥工具与证书
+    # Ensure gnupg and certificates
     if ! dpkg -l | grep -q "^ii.*gnupg"; then
-        apt-get install -y --no-install-recommends gnupg || log_warning "安装 gnupg 失败"
+        apt-get install -y --no-install-recommends gnupg || log_warning "Installing gnupg failed"
     fi
     if ! dpkg -l | grep -q "^ii.*ca-certificates"; then
-        apt-get install -y --no-install-recommends ca-certificates || log_warning "安装 ca-certificates 失败"
+        apt-get install -y --no-install-recommends ca-certificates || log_warning "Installing ca-certificates failed"
     fi
 
-    # 导入Kali仓库密钥到keyrings
-    if [[ ! -f /etc/apt/keyrings/kali-archive-keyring.gpg ]]; then
-        if curl -fsSL https://archive.kali.org/archive-key.asc | gpg --dearmor -o /etc/apt/keyrings/kali-archive-keyring.gpg; then
-            log_success "Kali仓库密钥导入完成"
+    # Import Kali repo key
+    if [[ ! -f "$KEYRINGS_DIR/kali-archive-keyring.gpg" ]]; then
+        if curl -fsSL https://archive.kali.org/archive-key.asc | gpg --dearmor -o "$KEYRINGS_DIR/kali-archive-keyring.gpg"; then
+            log_success "Imported Kali repository key"
         else
-            log_error "Kali仓库密钥导入失败"
+            log_error "Failed to import Kali repository key"
             return 1
         fi
     fi
 
-    # 统一Radxa密钥路径（优先使用系统已有的 /usr/share/keyrings）
-    # 清理可能存在的空文件，避免导致APT冲突
-    if [[ -f /etc/apt/keyrings/radxa-archive-keyring.gpg && ! -s /etc/apt/keyrings/radxa-archive-keyring.gpg ]]; then
-        rm -f /etc/apt/keyrings/radxa-archive-keyring.gpg
+    # Normalize Radxa keyring path
+    if [[ -f "$KEYRINGS_DIR/radxa-archive-keyring.gpg" && ! -s "$KEYRINGS_DIR/radxa-archive-keyring.gpg" ]]; then
+        rm -f "$KEYRINGS_DIR/radxa-archive-keyring.gpg"
     fi
     local RADXA_KEYRING=""
     if [[ -e /usr/share/keyrings/radxa-archive-keyring.gpg ]]; then
         RADXA_KEYRING="/usr/share/keyrings/radxa-archive-keyring.gpg"
-    elif [[ -s /etc/apt/keyrings/radxa-archive-keyring.gpg ]]; then
-        RADXA_KEYRING="/etc/apt/keyrings/radxa-archive-keyring.gpg"
+    elif [[ -s "$KEYRINGS_DIR/radxa-archive-keyring.gpg" ]]; then
+        RADXA_KEYRING="$KEYRINGS_DIR/radxa-archive-keyring.gpg"
     else
-        log_warning "未检测到 Radxa 密钥环，将跳过写入 Radxa 源"
+        log_warning "Radxa keyring not found; skipping Radxa repository"
     fi
 
-    # 写入sources.list，使用signed-by指向keyrings
-    cat > /etc/apt/sources.list.d/kali.list << 'EOF'
+    # Write sources.list entries
+    cat > "$SOURCES_DIR/kali.list" << 'EOF'
 deb [signed-by=/etc/apt/keyrings/kali-archive-keyring.gpg] http://http.kali.org/kali kali-rolling main non-free contrib
 deb-src [signed-by=/etc/apt/keyrings/kali-archive-keyring.gpg] http://http.kali.org/kali kali-rolling main non-free contrib
 EOF
 
-    # 写入 Radxa 源（若系统不存在同源定义且有可用密钥）
+    # Write Radxa repo if key is available and not present
     if [[ -n "$RADXA_KEYRING" ]]; then
-        if ! grep -Rqs "radxa-repo.github.io/bullseye" /etc/apt/sources.list.d; then
-            cat > /etc/apt/sources.list.d/radxa.list << EOF
+        if ! grep -Rqs "radxa-repo.github.io/bullseye" "$SOURCES_DIR"; then
+            cat > "$SOURCES_DIR/radxa.list" << EOF
 deb [signed-by=${RADXA_KEYRING}] https://radxa-repo.github.io/bullseye bullseye main
 EOF
         else
-            log_info "系统已存在 Radxa bullseye 源，跳过写入"
+            log_info "Radxa bullseye repository already present; skipping"
         fi
     fi
 
     apt-get update || {
-        log_error "APT源更新失败"
+        log_error "Failed to update APT sources"
         return 1
     }
-    log_success "Kali仓库设置完成"
+    log_success "Kali repositories configured"
 }
 
-# 克隆RadxaOS SDK
+# Clone RadxaOS SDK
 clone_radxaos_sdk() {
-    log_info "克隆RadxaOS SDK..."
+    log_info "Cloning RadxaOS SDK..."
     
     local sdk_dir="${SCRIPT_DIR}/rsdk"
     
     if [[ -d "$sdk_dir" ]]; then
-        log_info "RadxaOS SDK已存在，更新中..."
+        log_info "RadxaOS SDK exists; updating..."
         cd "$sdk_dir"
-        git pull --recurse-submodules
+        run_cmd "git pull --recurse-submodules" "git pull"
     else
-        log_info "克隆RadxaOS SDK..."
-        git clone --recurse-submodules https://github.com/RadxaOS-SDK/rsdk.git "$sdk_dir"
+        log_info "Cloning RadxaOS SDK..."
+        run_cmd "git clone --recurse-submodules https://github.com/RadxaOS-SDK/rsdk.git $sdk_dir" "git clone"
     fi
     
     cd "$sdk_dir"
     
-    # 安装Node.js依赖
+    # Install Node.js dependencies
     if command -v npm &> /dev/null; then
-        npm install @devcontainers/cli || log_warning "npm安装失败"
+        npm install @devcontainers/cli || log_warning "npm installation failed"
     fi
     
-    # 设置环境变量
+    # Set environment variables
     export PATH="$PWD/src/bin:$PWD/node_modules/.bin:$PATH"
     
-    log_success "RadxaOS SDK准备完成"
+    log_success "RadxaOS SDK ready"
 }
 
-# 生成配置文件
+# Generate configuration files
 generate_configs() {
-    log_info "生成配置文件..."
+    log_info "Generating configuration files..."
     
-    # 创建配置目录
+    # Create config directories
     mkdir -p "${SCRIPT_DIR}/configs"
     mkdir -p "${SCRIPT_DIR}/hooks"
     mkdir -p "${SCRIPT_DIR}/package-lists"
     
-    # 生成rootfs.jsonnet
+    # Generate rootfs.jsonnet
     cat > "${SCRIPT_DIR}/configs/rootfs.jsonnet" << EOF
 {
-    // 基础配置
+    // Base configuration
     "architecture": "$ARCH",
     "distribution": "$DISTRIBUTION",
     "vendor": "$VENDOR",
     "product": "$PRODUCT", 
     "version": "$VERSION",
     
-    // 仓库配置
+    // Repository configuration
     "repositories": [
         "deb http://http.kali.org/kali kali-rolling main non-free contrib",
         "deb-src http://http.kali.org/kali kali-rolling main non-free contrib",
         "deb https://radxa-repo.github.io/bullseye bullseye main"
     ],
     
-    // 基础包
+    // Base packages
     "base_packages": [
         "kali-linux-core",
         "kali-desktop-core",
@@ -300,7 +330,7 @@ generate_configs() {
         "kali-tools-sdr"
     ],
     
-    // 桌面环境 - 改为XFCE for Wayland
+    // Desktop environment - XFCE for Wayland
     "desktop_packages": [
         "xfce4",
         "xfce4-goodies", 
@@ -309,7 +339,7 @@ generate_configs() {
         "gtk3-engines-xfce"
     ],
     
-    // Wayland支持包
+    // Wayland packages
     "wayland_packages": [
         "wayland-protocols",
         "libwayland-client0",
@@ -320,7 +350,7 @@ generate_configs() {
         "foot"
     ],
     
-    // ZSH终端包
+    // ZSH shell packages
     "shell_packages": [
         "zsh",
         "git",
@@ -328,7 +358,7 @@ generate_configs() {
         "wget"
     ],
     
-    // Radxa硬件支持包
+    // Radxa hardware support packages
     "radxa_packages": [
         "firmware-realtek",
         "firmware-atheros", 
@@ -339,7 +369,7 @@ generate_configs() {
         "libmraa-dev"
     ],
     
-    // Waydroid支持
+    // Waydroid support
     "waydroid_packages": [
         "waydroid",
         "python3-gbinder",
@@ -347,7 +377,7 @@ generate_configs() {
         "cgroupfs-mount"
     ],
     
-    // 自定义钩子脚本
+    // Custom hook scripts
     "custom_hooks": [
         "9990-radxa-hardware-initialization.chroot",
         "9991-waydroid-nokvm-configuration.chroot", 
@@ -357,7 +387,7 @@ generate_configs() {
         "9995-vendor-information.chroot"
     ],
     
-    // 构建参数
+    // Build options
     "build_options": {
         "compression": "xz",
         "memtest": true,
@@ -367,51 +397,63 @@ generate_configs() {
 }
 EOF
     
-    log_success "配置文件生成完成"
+    log_success "Configuration files generated"
 }
 
-# 生成钩子脚本
+# Generate hook scripts
 generate_hooks() {
-    log_info "生成钩子脚本..."
+    log_info "Generating hook scripts..."
     
-    # 9990 - Radxa硬件初始化
+    # 9990 - Radxa hardware initialization
     cat > "${SCRIPT_DIR}/hooks/9990-radxa-hardware-initialization.chroot" << 'EOF'
 #!/bin/bash
 
-echo "=== Radxa硬件初始化 ==="
+set -Eeuo pipefail
 
-# 安装Radxa特定包
-apt-get install -y firmware-realtek firmware-atheros firmware-brcm80211
-apt-get install -y firmware-libertas firmware-misc-nonfree radxa-system-config
+echo "=== Radxa Hardware Initialization ==="
 
-# 配置设备树
+RADXA_FW=(
+  firmware-realtek
+  firmware-atheros
+  firmware-brcm80211
+  firmware-libertas
+  firmware-misc-nonfree
+  radxa-system-config
+)
+apt-get install -y "${RADXA_FW[@]}"
+
+# Configure device tree
 cp /usr/lib/linux-image-*/allwinner/a733-cubie-a7z.dtb /boot/
 
-# 配置GPIO支持
+# GPIO support
 apt-get install -y libmraa-dev python3-mraa
 
-# 配置I2C支持
+# I2C support
 echo "i2c-dev" >> /etc/modules-load.d/radxa.conf
 
-# 配置SPI支持  
+# SPI support
 echo "spidev" >> /etc/modules-load.d/radxa.conf
 
-# 设置硬件权限
-usermod -a -G gpio,dialout,i2c,spi kali
+# Hardware permissions
+if id "kali" &>/dev/null; then
+  usermod -a -G gpio,dialout,i2c,spi kali
+fi
 
-echo "Radxa硬件初始化完成"
+echo "Radxa hardware initialization completed"
 EOF
 
-    # 9991 - Waydroid无KVM配置
+    # 9991 - Waydroid no-KVM configuration
     cat > "${SCRIPT_DIR}/hooks/9991-waydroid-nokvm-configuration.chroot" << 'EOF'
 #!/bin/bash
 
-echo "=== Waydroid无KVM配置 ==="
+set -Eeuo pipefail
 
-# 安装Waydroid
+echo "=== Waydroid no-KVM Configuration ==="
+
+# Install Waydroid and dependencies
 apt-get install -y waydroid python3-gbinder lxc cgroupfs-mount
 
-# 配置Waydroid无KVM模式
+# Waydroid no-KVM mode
 cat > /etc/waydroid.cfg << 'WAYDROID_EOF'
 [waydroid]
 arch = arm64
@@ -426,7 +468,7 @@ vndbinder = anbox-vndbinder
 hwbinder = anbox-hwbinder
 WAYDROID_EOF
 
-# 配置LXC无特权容器
+# Unprivileged LXC container config
 cat > /etc/lxc/default.conf << 'LXC_EOF'
 lxc.net.0.type = veth
 lxc.net.0.link = lxcbr0
@@ -436,150 +478,154 @@ lxc.idmap = u 0 100000 65536
 lxc.idmap = g 0 100000 65536
 LXC_EOF
 
-# 启用IP转发
+# Enable IP forwarding
 echo "net.ipv4.ip_forward = 1" >> /etc/sysctl.conf
 sysctl -p
 
-echo "Waydroid无KVM配置完成"
+echo "Waydroid no-KVM configuration completed"
 EOF
 
-    # 9992 - Kali工具配置
+    # 9992 - Kali tools configuration
     cat > "${SCRIPT_DIR}/hooks/9992-kali-tools-configuration.chroot" << 'EOF'
 #!/bin/bash
 
-echo "=== Kali工具配置 ==="
+set -Eeuo pipefail
 
-# 安装核心Kali工具
-apt-get install -y kali-linux-core kali-desktop-core
+echo "=== Kali Tools Configuration ==="
 
-# 安装信息收集工具
+KALI_BASE=(kali-linux-core kali-desktop-core)
+apt-get install -y "${KALI_BASE[@]}"
+
 apt-get install -y kali-tools-information-gathering
 
-# 安装漏洞分析工具
 apt-get install -y kali-tools-vulnerability
 
-# 安装Web应用工具
 apt-get install -y kali-tools-web
 
-# 安装无线安全工具
 apt-get install -y kali-tools-802-11 kali-tools-bluetooth kali-tools-rfid kali-tools-sdr
 
-# 配置网络工具
+# Networking tools
 apt-get install -y wireless-tools rfkill crda
 
-# 创建工具启动脚本
+# Create helper script
 mkdir -p /usr/local/bin
 
 cat > /usr/local/bin/kali-tools-info << 'TOOLS_EOF'
 #!/bin/bash
-echo "=== Kali工具状态 ==="
-echo "Nmap版本: $(nmap --version | head -1)"
-echo "Aircrack-ng版本: $(aircrack-ng --version 2>/dev/null | head -1)"
-echo "Metasploit版本: $(msfconsole --version 2>/dev/null)"
-echo "Wireshark版本: $(tshark --version 2>/dev/null | head -1)"
-echo "SQLMap版本: $(sqlmap --version 2>/dev/null)"
+echo "=== Kali Tools Status ==="
+echo "Nmap: $(nmap --version | head -1)"
+echo "Aircrack-ng: $(aircrack-ng --version 2>/dev/null | head -1)"
+echo "Metasploit: $(msfconsole --version 2>/dev/null)"
+echo "Wireshark: $(tshark --version 2>/dev/null | head -1)"
+echo "SQLMap: $(sqlmap --version 2>/dev/null)"
 TOOLS_EOF
 
 chmod +x /usr/local/bin/kali-tools-info
 
-echo "Kali工具配置完成"
+echo "Kali tools configuration completed"
 EOF
 
-    # 9993 - ZSH配置
+    # 9993 - ZSH configuration
     cat > "${SCRIPT_DIR}/hooks/9993-zsh-configuration.chroot" << 'EOF'
 #!/bin/bash
 
-echo "=== ZSH终端配置 ==="
+set -Eeuo pipefail
 
-# 安装ZSH
+echo "=== ZSH Shell Configuration ==="
+
+# Install ZSH and tools
 apt-get install -y zsh git curl wget
 
-# 安装oh-my-zsh
+# Install oh-my-zsh
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 
-# 配置ZSH插件
+# Plugins
 git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
 git clone https://github.com/zsh-users/zsh-syntax-highlighting ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
 
-# 配置.zshrc
+# Configure .zshrc
 cat > /etc/skel/.zshrc << 'ZSH_EOF'
-# oh-my-zsh配置
+# oh-my-zsh configuration
 export ZSH="$HOME/.oh-my-zsh"
 ZSH_THEME="robbyrussell"
 plugins=(git zsh-autosuggestions zsh-syntax-highlighting docker)
 source $ZSH/oh-my-zsh.sh
 
-# 自定义别名
+# Aliases
 alias ll='ls -alF'
 alias la='ls -A'
 alias l='ls -CF'
 alias update='sudo apt update && sudo apt upgrade'
 alias kali='kali-tools-info'
 
-# Kali特定配置
+# Kali-specific settings
 export PATH=$PATH:/usr/share/metasploit-framework
 export MSF_DATABASE_CONFIG=/usr/share/metasploit-framework/config/database.yml
 ZSH_EOF
 
-# 设置ZSH为默认shell
-chsh -s /bin/zsh
-chsh -s /bin/zsh kali
+# Set ZSH as default shell
+if command -v chsh >/dev/null 2>&1; then
+  chsh -s /bin/zsh || true
+  chsh -s /bin/zsh kali || true
+fi
 
-# 复制配置到现有用户
+# Copy config to existing user
 if id "kali" &>/dev/null; then
     cp /etc/skel/.zshrc /home/kali/
     chown kali:kali /home/kali/.zshrc
 fi
 
-echo "ZSH终端配置完成"
+echo "ZSH configuration completed"
 EOF
 
-    # 9994 - Wayland桌面配置
+    # 9994 - Wayland desktop configuration
     cat > "${SCRIPT_DIR}/hooks/9994-wayland-desktop-configuration.chroot" << 'EOF'
 #!/bin/bash
 
-echo "=== Wayland桌面配置 ==="
+set -Eeuo pipefail
 
-# 安装Wayland compositor
+echo "=== Wayland Desktop Configuration ==="
+
+# Install Wayland compositor
 apt-get install -y wayland-protocols libwayland-client0 weston sway waybar wofi foot
 
-# 安装XFCE for Wayland
+# Install XFCE for Wayland
 apt-get install -y xfce4 xfce4-goodies xfce4-panel thunar gtk3-engines-xfce
 
-# 配置Sway compositor
+# Sway compositor configuration
 cat > /etc/sway/config << 'SWAY_EOF'
-# Sway配置 - 适用于Radxa Kali
+# Sway configuration - for Radxa Kali
 set $mod Mod4
 
-# 基本配置
+# Basic configuration
 output * bg /usr/share/backgrounds/kali/kali-linux.png fill
 xwayland enable
 
-# 快捷键
+# Key bindings
 bindsym $mod+Return exec foot
 bindsym $mod+Shift+q kill
 bindsym $mod+d exec wofi --show drun
-bindsym $mod+Shift+e exec swaynag -t warning -m '退出Sway?' -b '是' 'swaymsg exit'
+bindsym $mod+Shift+e exec swaynag -t warning -m 'Exit Sway?' -b 'Yes' 'swaymsg exit'
 
-# 工作区
+# Workspaces
 bindsym $mod+1 workspace number 1
 bindsym $mod+2 workspace number 2
 bindsym $mod+3 workspace number 3
 bindsym $mod+4 workspace number 4
 
-# 窗口管理
+# Window management
 floating_modifier $mod
 bindsym $mod+h focus left
 bindsym $mod+j focus down
 bindsym $mod+k focus up
 bindsym $mod+l focus right
 
-# 启动应用
+# Autostart apps
 exec waybar
 exec nm-applet
 SWAY_EOF
 
-# 配置Waybar
+# Waybar configuration
 cat > /etc/waybar/config << 'WAYBAR_EOF'
 {
     "layer": "top",
@@ -616,7 +662,7 @@ cat > /etc/waybar/config << 'WAYBAR_EOF'
 }
 WAYBAR_EOF
 
-# 创建启动脚本
+# Startup scripts
 cat > /usr/local/bin/start-wayland.sh << 'START_EOF'
 #!/bin/bash
 export XDG_RUNTIME_DIR=/run/user/$(id -u)
@@ -624,7 +670,7 @@ export WAYLAND_DISPLAY=wayland-0
 export XWAYLAND_ENABLE=1
 export XWAYLAND_GLAMOR=1
 
-# 启动Sway
+# Start Sway
 exec sway
 START_EOF
 
@@ -634,42 +680,44 @@ export GDK_BACKEND=wayland
 export CLUTTER_BACKEND=wayland
 export XDG_SESSION_TYPE=wayland
 
-# 启动XFCE Wayland会话
+# Start XFCE Wayland session
 exec dbus-run-session startxfce4
 XFCE_START_EOF
 
 chmod +x /usr/local/bin/start-wayland.sh /usr/local/bin/start-xfce-wayland.sh
 
-# 兼容性库
+# Compatibility libraries
 apt-get install -y xwayland qtwayland5 qt5-qpa-plugin-wayland gtk-layer-shell libgtk-3-0
 
-echo "Wayland桌面配置完成"
+echo "Wayland desktop configuration completed"
 EOF
 
-    # 9995 - 厂商信息配置
+    # 9995 - Vendor information configuration
     cat > "${SCRIPT_DIR}/hooks/9995-vendor-information.chroot" << EOF
 #!/bin/bash
 
-echo "=== 配置厂商信息 ==="
+set -Eeuo pipefail
 
-# 设置系统厂商信息
+echo "=== Vendor Information Configuration ==="
+
+# Set vendor/product/version files
 echo "$VENDOR" > /etc/vendor-name
 echo "$PRODUCT" > /etc/product-name
 echo "$VERSION" > /etc/product-version
 
-# 创建厂商信息文件
-cat > /etc/kali-radxa-info << 'VENDOR_EOF'
+# Create vendor info file (expand variables here)
+cat > /etc/kali-radxa-info << VENDOR_EOF
 # Radxa Kali Linux - $VENDOR Edition
 VENDOR=$VENDOR
 PRODUCT=$PRODUCT
 VERSION=$VERSION
-BUILD_DATE=\$(date +%Y%m%d)
+BUILD_DATE=$(date +%Y%m%d)
 KALI_VERSION=kali-rolling
 RADXA_TARGET=cubie-a7z
 VENDOR_EOF
 
-# 创建系统标识
-cat > /etc/os-release-radxa << 'OS_EOF'
+# Create system identifier
+cat > /etc/os-release-radxa << OS_EOF
 NAME="Kali Linux"
 VERSION="2024.1"
 ID=kali
@@ -683,39 +731,39 @@ VENDOR=$VENDOR
 PRODUCT=$PRODUCT
 OS_EOF
 
-# 创建欢迎信息
-cat > /etc/motd << 'MOTD_EOF'
+# Create MOTD (expand variables here; keep ASCII to avoid encoding issues)
+cat > /etc/motd << MOTD_EOF
 Welcome to Kali Linux $VENDOR Edition!
-→ Wayland桌面环境已就绪
-→ ZSH终端已配置完成  
-→ Kali渗透测试工具已安装
-→ Radxa硬件支持已激活
-→ Waydroid Android容器已配置
+- Wayland desktop is ready
+- ZSH shell is configured
+- Kali pentest tools installed
+- Radxa hardware support enabled
+- Waydroid container configured
 
-系统信息:
-- 厂商: $VENDOR
-- 产品: $PRODUCT
-- 版本: $VERSION
-- 架构: $ARCH
-- 发行版: $DISTRIBUTION
+System info:
+- Vendor: $VENDOR
+- Product: $PRODUCT
+- Version: $VERSION
+- Architecture: $ARCH
+- Distribution: $DISTRIBUTION
 MOTD_EOF
 
-echo "厂商信息配置完成"
+echo "Vendor information configuration completed"
 EOF
 
     # 设置钩子脚本权限
     chmod +x "${SCRIPT_DIR}/hooks"/*.chroot
     
-    log_success "钩子脚本生成完成"
+    log_success "Hook scripts generated"
 }
 
-# 生成包列表
+# Generate package lists
 generate_package_lists() {
-    log_info "生成包列表..."
+    log_info "Generating package lists..."
     
-    # Kali核心包
+    # Kali core packages
     cat > "${SCRIPT_DIR}/package-lists/kali-core.list" << 'EOF'
-# Kali Linux核心包
+# Kali Linux core packages
 kali-linux-core
 kali-desktop-core
 kali-tools-information-gathering
@@ -727,9 +775,9 @@ kali-tools-rfid
 kali-tools-sdr
 EOF
 
-    # Radxa硬件支持包
+    # Radxa hardware support
     cat > "${SCRIPT_DIR}/package-lists/radxa-hardware.list" << 'EOF'
-# Radxa硬件支持包
+# Radxa hardware support packages
 firmware-realtek
 firmware-atheros
 firmware-brcm80211
@@ -740,9 +788,9 @@ libmraa-dev
 python3-mraa
 EOF
 
-    # Wayland桌面包
+    # Wayland desktop
     cat > "${SCRIPT_DIR}/package-lists/wayland-desktop.list" << 'EOF'
-# Wayland桌面环境
+# Wayland desktop packages
 wayland-protocols
 libwayland-client0
 weston
@@ -762,9 +810,9 @@ gtk-layer-shell
 libgtk-3-0
 EOF
 
-    # ZSH终端包
+    # ZSH shell
     cat > "${SCRIPT_DIR}/package-lists/zsh-shell.list" << 'EOF'
-# ZSH终端和工具
+# ZSH shell and tools
 zsh
 git
 curl
@@ -776,9 +824,9 @@ tree
 jq
 EOF
 
-    # Waydroid支持包
+    # Waydroid support
     cat > "${SCRIPT_DIR}/package-lists/waydroid.list" << 'EOF'
-# Waydroid Android容器支持
+# Waydroid Android container support
 waydroid
 python3-gbinder
 lxc
@@ -787,9 +835,9 @@ bridge-utils
 iptables
 EOF
 
-    # 网络工具包
+    # Network tools
     cat > "${SCRIPT_DIR}/package-lists/network-tools.list" << 'EOF'
-# 网络工具
+# Network tools
 wireless-tools
 rfkill
 crda
@@ -801,28 +849,28 @@ pixiewps
 wifite
 EOF
 
-    log_success "包列表生成完成"
+    log_success "Package lists generated"
 }
 
-# 主构建函数
+# Build system
 build_system() {
-    log_info "开始构建Radxa Kali Linux系统..."
+    log_info "Starting Radxa Kali Linux build..."
     
     local build_dir="${SCRIPT_DIR}/build"
     local output_dir="${SCRIPT_DIR}/output"
     
-    # 创建构建目录
+    # Create build directories
     mkdir -p "$build_dir" "$output_dir"
     
-    # 复制配置文件到构建目录
+    # Copy configs to build directory
     cp -r "${SCRIPT_DIR}/configs"/* "$build_dir/"
     cp -r "${SCRIPT_DIR}/hooks" "$build_dir/"
     cp -r "${SCRIPT_DIR}/package-lists" "$build_dir/"
     
     cd "$build_dir"
     
-    # 使用live-build构建系统
-    log_info "初始化live-build..."
+    # Configure live-build
+    log_info "Initializing live-build..."
     lb config \
         --architectures "$ARCH" \
         --distribution "$DISTRIBUTION" \
@@ -850,78 +898,78 @@ build_system() {
         --swap-file-size 1024 \
         --build-with-chroot true
     
-    # 添加自定义配置
+    # Apply custom config if present
     if [[ -f "rootfs.jsonnet" ]]; then
-        log_info "应用自定义配置..."
-        # 这里可以添加jsonnet到实际配置的转换逻辑
+        log_info "Applying custom configuration..."
+        # TODO: convert jsonnet to actual config if needed
     fi
     
-    # 复制钩子脚本
+    # Copy hook scripts
     if [[ -d "hooks" ]]; then
         cp hooks/* config/hooks/normal/
     fi
     
-    # 复制包列表
+    # Copy package lists
     if [[ -d "package-lists" ]]; then
         cp package-lists/* config/package-lists/
     fi
     
-    # 开始构建
-    log_info "开始构建过程，这可能需要几个小时..."
+    # Build
+    log_info "Starting build; this may take several hours..."
     lb build 2>&1 | tee -a "$LOG_FILE"
     
     if [[ ${PIPESTATUS[0]} -eq 0 ]]; then
-        log_success "构建成功完成！"
+        log_success "Build completed successfully!"
         
-        # 移动输出文件
+        # Move output files
         mv *.iso *.img *.tar* "$output_dir/" 2>/dev/null || true
         
-        log_info "构建输出位于: $output_dir"
+        log_info "Build artifacts located at: $output_dir"
         ls -lh "$output_dir"
     else
-        log_error "构建失败，请检查日志文件: $LOG_FILE"
+        log_error "Build failed; check log file: $LOG_FILE"
         exit 1
     fi
 }
 
-# 清理函数
+# Cleanup
 cleanup() {
-    log_info "清理构建环境..."
+    log_info "Cleaning build environment..."
     
-    # 清理临时文件
+    # Clean temporary files
     rm -rf /tmp/tmp.*
     apt-get clean
     apt-get autoremove -y
     
-    log_success "清理完成"
+    log_success "Cleanup completed"
 }
 
-# 显示帮助信息
+# Help
 show_help() {
-    echo "Radxa Cubie A7Z Kali Linux 构建系统"
-    echo "作者: $VENDOR"
-    echo "版本: $VERSION"
+    echo "Radxa Cubie A7Z Kali Linux build system"
+    echo "Author: $VENDOR"
+    echo "Version: $VERSION"
     echo ""
-    echo "用法: $0 [选项]"
+    echo "Usage: $0 [options]"
     echo ""
-    echo "选项:"
-    echo "  -h, --help      显示帮助信息"
-    echo "  -c, --clean     清理构建环境"
-    echo "  -v, --version   显示版本信息"
-    echo "  --deps-only     仅安装依赖"
-    echo "  --config-only   仅生成配置文件"
+    echo "Options:"
+    echo "  -h, --help      Show help"
+    echo "  -c, --clean     Clean build environment"
+    echo "  -v, --version   Show version"
+    echo "  --deps-only     Install dependencies only"
+    echo "  --config-only   Generate configs only"
     echo ""
-    echo "示例:"
-    echo "  $0              完整构建"
-    echo "  $0 --deps-only  仅安装依赖"
-    echo "  $0 --clean      清理环境"
+    echo "Examples:"
+    echo "  $0              Full build"
+    echo "  $0 --deps-only  Dependencies only"
+    echo "  $0 --clean      Clean environment"
 }
 
-# 主函数
+# Main
 main() {
     local action="full"
     
-    # 解析命令行参数
+    # Parse CLI arguments
     while [[ $# -gt 0 ]]; do
         case $1 in
             -h|--help)
@@ -945,15 +993,15 @@ main() {
                 shift
                 ;;
             *)
-                log_error "未知参数: $1"
+                log_error "Unknown argument: $1"
                 show_help
                 exit 1
                 ;;
         esac
     done
     
-    # 初始化日志
-    echo "构建开始于: $(date)" > "$LOG_FILE"
+    # Initialize log
+    echo "Build started at: $(date)" > "$LOG_FILE"
     
     case "$action" in
         "full")
@@ -982,11 +1030,11 @@ main() {
             ;;
     esac
     
-    log_success "所有任务完成！"
-    echo "构建结束于: $(date)" >> "$LOG_FILE"
+    log_success "All tasks completed!"
+    echo "Build finished at: $(date)" >> "$LOG_FILE"
 }
 
-# 脚本入口
+# Entry point
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     main "$@"
 fi
