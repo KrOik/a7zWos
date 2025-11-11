@@ -57,10 +57,11 @@
     // Radxa硬件支持包
     "radxa_packages": [
         "firmware-realtek",
-        "firmware-atheros", 
+        "firmware-ath9k-htc",
         "firmware-brcm80211",
         "firmware-libertas",
         "firmware-misc-nonfree",
+        "firmware-iwlwifi",
         "radxa-system-config",
         "libmraa-dev"
     ],

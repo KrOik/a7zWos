@@ -2,8 +2,23 @@
 
 echo "=== Waydroid无KVM配置 ==="
 
-# 安装Waydroid
-apt-get install -y waydroid python3-gbinder lxc cgroupfs-mount
+installable() {
+    local pkg="$1"
+    local cand
+    cand=$(apt-cache policy "$pkg" 2>/dev/null | awk '/Candidate:/ {print $2}')
+    [[ -n "$cand" && "$cand" != "(none)" ]]
+}
+
+# 安装Waydroid（如果仓库中可用，否则跳过）
+if installable waydroid; then
+    to_install=(waydroid lxc)
+    installable python3-gbinder && to_install+=(python3-gbinder)
+    installable cgroupfs-mount && to_install+=(cgroupfs-mount)
+    apt-get install -y "${to_install[@]}"
+else
+    echo "Waydroid 不在当前软件源中，跳过Waydroid安装与配置。"
+    exit 0
+fi
 
 # 配置Waydroid无KVM模式
 cat > /etc/waydroid.cfg << 'WAYDROID_EOF'

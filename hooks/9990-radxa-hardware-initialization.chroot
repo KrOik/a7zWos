@@ -3,8 +3,8 @@
 echo "=== Radxa硬件初始化 ==="
 
 # 安装Radxa特定包
-apt-get install -y firmware-realtek firmware-atheros firmware-brcm80211
-apt-get install -y firmware-libertas firmware-misc-nonfree radxa-system-config
+apt-get install -y firmware-realtek firmware-ath9k-htc firmware-brcm80211
+apt-get install -y firmware-libertas firmware-misc-nonfree firmware-iwlwifi radxa-system-config
 
 # 配置设备树
 cp /usr/lib/linux-image-*/allwinner/a733-cubie-a7z.dtb /boot/

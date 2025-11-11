@@ -369,10 +369,11 @@ echo "=== Radxa Hardware Initialization ==="
 
 RADXA_FW=(
   firmware-realtek
-  firmware-atheros
+  firmware-ath9k-htc
   firmware-brcm80211
   firmware-libertas
   firmware-misc-nonfree
+  firmware-iwlwifi
   radxa-system-config
 )
 apt-get install -y "${RADXA_FW[@]}"
@@ -405,8 +406,23 @@ set -Eeuo pipefail
 
 echo "=== Waydroid no-KVM Configuration ==="
 
-# Install Waydroid and dependencies
-apt-get install -y waydroid python3-gbinder lxc cgroupfs-mount
+installable() {
+    local pkg="$1"
+    local cand
+    cand=$(apt-cache policy "$pkg" 2>/dev/null | awk '/Candidate:/ {print $2}')
+    [[ -n "$cand" && "$cand" != "(none)" ]]
+}
+
+# Install Waydroid and dependencies if available, otherwise skip
+if installable waydroid; then
+    to_install=(waydroid lxc)
+    installable python3-gbinder && to_install+=(python3-gbinder)
+    installable cgroupfs-mount && to_install+=(cgroupfs-mount)
+    apt-get install -y "${to_install[@]}"
+else
+    echo "Waydroid not available in current repos; skipping Waydroid install and configuration."
+    exit 0
+fi
 
 # Waydroid no-KVM mode
 cat > /etc/waydroid.cfg << 'WAYDROID_EOF'
@@ -734,10 +750,11 @@ EOF
     cat > "${SCRIPT_DIR}/package-lists/radxa-hardware.list" << 'EOF'
 # Radxa hardware support packages
 firmware-realtek
-firmware-atheros
+firmware-ath9k-htc
 firmware-brcm80211
 firmware-libertas
 firmware-misc-nonfree
+firmware-iwlwifi
 radxa-system-config
 libmraa-dev
 python3-mraa
@@ -757,11 +774,9 @@ xfce4
 xfce4-goodies
 xfce4-panel
 thunar
-gtk3-engines-xfce
 xwayland
 qtwayland5
-qt5-qpa-plugin-wayland
-gtk-layer-shell
+libgtk-layer-shell0
 libgtk-3-0
 EOF
 
@@ -795,13 +810,13 @@ EOF
 # Network tools
 wireless-tools
 rfkill
-crda
 iw
 hostapd
 aircrack-ng
 reaver
 pixiewps
 wifite
+wireless-regdb
 EOF
 
     log_success "Package lists generated"
@@ -831,7 +846,7 @@ build_system() {
     lb config \
         --architectures "$ARCH" \
         --distribution "$DISTRIBUTION" \
-        --archive-areas "main contrib non-free" \
+        --archive-areas "main contrib non-free non-free-firmware" \
         --bootappend-live "boot=live components" \
         --memtest "memtest86+" \
         --win32-loader false \
@@ -874,6 +889,13 @@ build_system() {
     if [[ -d "package-lists" ]]; then
         cp package-lists/* config/package-lists/
     fi
+
+    # Add Radxa repository inside chroot (no effect on host)
+    mkdir -p config/archives
+    cat > config/archives/radxa.list.chroot << 'EOF'
+deb https://radxa-repo.github.io/bullseye bullseye main
+EOF
+
     
     # Build
     log_info "Starting build; this may take several hours..."

@@ -10,9 +10,7 @@ xfce4
 xfce4-goodies
 xfce4-panel
 thunar
-gtk3-engines-xfce
 xwayland
 qtwayland5
-qt5-qpa-plugin-wayland
-gtk-layer-shell
+libgtk-layer-shell0
 libgtk-3-0
