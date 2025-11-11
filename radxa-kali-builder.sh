@@ -135,7 +135,19 @@ install_dependencies() {
     export DEBIAN_FRONTEND=noninteractive
     
     run_with_retry 3 3 "apt-get update" "apt-get update"
-    
+
+    # Temporarily hold critical base packages to avoid host upgrades
+    local protect_pkgs=("base-files" "libc6" "libc-bin")
+    local held_pkgs=()
+    for p in "${protect_pkgs[@]}"; do
+        if dpkg -l | grep -q "^ii.*$p"; then
+            if apt-mark hold "$p" >/dev/null 2>&1; then
+                held_pkgs+=("$p")
+                log_info "Held package to prevent upgrade: $p"
+            fi
+        fi
+    done
+
     local deps=(
         "git"
         "curl"
@@ -181,7 +193,7 @@ install_dependencies() {
     for dep in "${deps[@]}"; do
         if ! dpkg -l | grep -q "^ii.*$dep"; then
             log_info "Installing dependency: $dep"
-            if ! run_with_retry 2 5 "apt-get install -y $dep" "apt-get install $dep"; then
+            if ! run_with_retry 2 5 "apt-get install -y --no-upgrade --no-install-recommends $dep" "apt-get install $dep"; then
                 failed_pkgs+=("$dep")
             fi
         fi
@@ -190,6 +202,12 @@ install_dependencies() {
         log_error "Failed to install packages: ${failed_pkgs[*]}"
         return 1
     fi
+
+    # Unhold previously held packages
+    for p in "${held_pkgs[@]}"; do
+        apt-mark unhold "$p" >/dev/null 2>&1 || true
+        log_info "Unheld package: $p"
+    done
     
     log_success "Build dependencies installation completed"
 }
