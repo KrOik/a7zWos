@@ -518,8 +518,24 @@ apt-get install -y kali-tools-web
 
 apt-get install -y kali-tools-802-11 kali-tools-bluetooth kali-tools-rfid kali-tools-sdr
 
-# Networking tools
-apt-get install -y wireless-tools rfkill crda
+# Networking tools (guard availability and replace deprecated crda)
+installable() {
+  local pkg="$1"; local cand
+  cand=$(apt-cache policy "$pkg" 2>/dev/null | awk '/Candidate:/ {print $2}')
+  [[ -n "$cand" && "$cand" != "(none)" ]]
+}
+NET_TOOLS=(wireless-tools rfkill wireless-regdb)
+TO_INSTALL=()
+for p in "${NET_TOOLS[@]}"; do
+  if installable "$p"; then
+    TO_INSTALL+=("$p")
+  else
+    echo "Skipping unavailable package: $p"
+  fi
+done
+if [[ ${#TO_INSTALL[@]} -gt 0 ]]; then
+  apt-get install -y "${TO_INSTALL[@]}"
+fi
 
 # Create helper script
 mkdir -p /usr/local/bin

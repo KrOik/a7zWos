@@ -17,8 +17,24 @@ apt-get install -y kali-tools-web
 # 安装无线安全工具
 apt-get install -y kali-tools-802-11 kali-tools-bluetooth kali-tools-rfid kali-tools-sdr
 
-# 配置网络工具
-apt-get install -y wireless-tools rfkill crda
+# 配置网络工具（替换已弃用的 crda 并增加可用性检查）
+installable() {
+    local pkg="$1"; local cand
+    cand=$(apt-cache policy "$pkg" 2>/dev/null | awk '/Candidate:/ {print $2}')
+    [[ -n "$cand" && "$cand" != "(none)" ]]
+}
+net_tools=(wireless-tools rfkill wireless-regdb)
+to_install=()
+for p in "${net_tools[@]}"; do
+    if installable "$p"; then
+        to_install+=("$p")
+    else
+        echo "跳过不可用软件包: $p"
+    fi
+done
+if [[ ${#to_install[@]} -gt 0 ]]; then
+    apt-get install -y "${to_install[@]}"
+fi
 
 # 创建工具启动脚本
 mkdir -p /usr/local/bin
