@@ -9,8 +9,7 @@
     // 仓库配置
     "repositories": [
         "deb http://http.kali.org/kali kali-rolling main non-free contrib",
-        "deb-src http://http.kali.org/kali kali-rolling main non-free contrib",
-        "deb https://radxa-repo.github.io/bullseye bullseye main"
+        "deb-src http://http.kali.org/kali kali-rolling main non-free contrib"
     ],
     
     // 基础包

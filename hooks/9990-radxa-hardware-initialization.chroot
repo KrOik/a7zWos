@@ -23,16 +23,8 @@ if [[ ${#to_install[@]} -gt 0 ]]; then
     apt-get install -y "${to_install[@]}"
 fi
 
-# 配置设备树
-dtb_src=""
-for candidate in \
-    /usr/lib/linux-image-*/allwinner/a733-cubie-a7z.dtb \
-    /usr/lib/linux-image-*/allwinner/sun60i-a733-cubie-a7z.dtb; do
-    if ls "$candidate" >/dev/null 2>&1; then
-        dtb_src="$candidate"
-        break
-    fi
-done
+# 配置设备树（使用更稳健的查找方式）
+dtb_src="$(find /usr/lib/linux-image-* -type f \( -name 'a733-cubie-a7z.dtb' -o -name 'sun60i-a733-cubie-a7z.dtb' \) 2>/dev/null | head -n1)"
 if [[ -n "$dtb_src" ]]; then
     base_name="$(basename "$dtb_src")"
     cp "$dtb_src" /boot/
@@ -44,7 +36,7 @@ if [[ -n "$dtb_src" ]]; then
     fi
     echo "已复制 $base_name 到 /boot 并创建别名"
 else
-    echo "未在 /usr/lib/linux-image-*/allwinner 找到 Cubie-A7Z 设备树，跳过复制"
+    echo "未在 /usr/lib/linux-image-* 路径下找到 Cubie-A7Z 设备树，跳过复制"
 fi
 
 # 配置GPIO支持

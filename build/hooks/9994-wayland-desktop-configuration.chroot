@@ -2,11 +2,31 @@
 
 echo "=== Wayland桌面配置 ==="
 
-# 安装Wayland compositor
-apt-get install -y wayland-protocols libwayland-client0 weston sway waybar wofi foot
+# 安装可用性检测函数，避免因单个包缺失导致构建失败
+installable() {
+    local pkg="$1"
+    local cand
+    cand=$(apt-cache policy "$pkg" 2>/dev/null | awk '/Candidate:/ {print $2}')
+    [[ -n "$cand" && "$cand" != "(none)" ]]
+}
 
-# 安装XFCE for Wayland
-apt-get install -y xfce4 xfce4-goodies xfce4-panel thunar gtk3-engines-xfce
+# 安装Wayland compositor（按可用性安装）
+for p in wayland-protocols libwayland-client0 weston sway waybar wofi foot; do
+    if installable "$p"; then
+        apt-get install -y "$p"
+    else
+        echo "Skipping unavailable package: $p"
+    fi
+done
+
+# 安装XFCE for Wayland（移除已缺失的 gtk3-engines-xfce，按可用性安装）
+for p in xfce4 xfce4-goodies xfce4-panel thunar; do
+    if installable "$p"; then
+        apt-get install -y "$p"
+    else
+        echo "Skipping unavailable package: $p"
+    fi
+done
 
 # 配置Sway compositor
 cat > /etc/sway/config << 'SWAY_EOF'
@@ -102,7 +122,13 @@ XFCE_START_EOF
 
 chmod +x /usr/local/bin/start-wayland.sh /usr/local/bin/start-xfce-wayland.sh
 
-# 兼容性库
-apt-get install -y xwayland qtwayland5 qt5-qpa-plugin-wayland gtk-layer-shell libgtk-3-0
+# 兼容性库（按可用性安装）
+for p in xwayland qtwayland5 qt5-qpa-plugin-wayland libgtk-layer-shell0 libgtk-3-0; do
+    if installable "$p"; then
+        apt-get install -y "$p"
+    else
+        echo "Skipping unavailable package: $p"
+    fi
+done
 
 echo "Wayland桌面配置完成"

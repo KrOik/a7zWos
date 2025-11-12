@@ -134,9 +134,20 @@ radxa-specific-packages="
 # /etc/apt/sources.list.d/kali.list
 deb http://http.kali.org/kali kali-rolling main non-free contrib
 deb-src http://http.kali.org/kali kali-rolling main non-free contrib
+```
 
-# Radxa仓库保持
-deb https://radxa-repo.github.io/bullseye bullseye main
+**Radxa仓库（可选）**：默认不启用，以避免网络环境下的 TLS/SSL 校验证书问题，且与 Kali ARM 官方脚本保持兼容。
+
+如确有需求（安装 `radxa-system-config`、`libmraa-dev` 等），建议在构建前启用环境变量：
+
+```bash
+export ENABLE_RADXA_REPO=1
+```
+
+或者手动添加源（建议使用 signed-by）：
+
+```bash
+echo "deb [signed-by=/usr/share/keyrings/radxa-archive-keyring.gpg] https://radxa-repo.github.io/bullseye bullseye main" | sudo tee /etc/apt/sources.list.d/radxa.list
 ```
 
 **GPG密钥管理：**
@@ -145,8 +156,8 @@ deb https://radxa-repo.github.io/bullseye bullseye main
 # 添加Kali GPG密钥
 wget -q -O - https://archive.kali.org/archive-key.asc | apt-key add -
 
-# 添加Radxa GPG密钥（保持兼容性）
-wget -q -O - https://radxa-repo.github.io/bullseye/public.key | apt-key add -
+# 添加Radxa GPG密钥（可选）
+curl -fsSL https://radxa-repo.github.io/bullseye/radxa-archive-keyring.gpg -o /usr/share/keyrings/radxa-archive-keyring.gpg
 ```
 
 ### 2.3 ARM64适配策略
@@ -1134,7 +1145,6 @@ EOF
     cat > "$CONFIG_DIR/apt/sources.list.chroot" <<EOF
 deb http://http.kali.org/kali kali-rolling main non-free contrib
 deb-src http://http.kali.org/kali kali-rolling main non-free contrib
-deb https://radxa-repo.github.io/bullseye bullseye main
 EOF
 }
 

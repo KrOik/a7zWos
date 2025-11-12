@@ -268,8 +268,7 @@ generate_configs() {
     // Repository configuration
     "repositories": [
         "deb http://http.kali.org/kali kali-rolling main non-free contrib",
-        "deb-src http://http.kali.org/kali kali-rolling main non-free contrib",
-        "deb https://radxa-repo.github.io/bullseye bullseye main"
+        "deb-src http://http.kali.org/kali kali-rolling main non-free contrib"
     ],
     
     // Base packages
@@ -290,8 +289,7 @@ generate_configs() {
         "xfce4",
         "xfce4-goodies", 
         "xfce4-panel",
-        "thunar",
-        "gtk3-engines-xfce"
+        "thunar"
     ],
     
     // Wayland packages
@@ -394,16 +392,8 @@ if [[ ${#TO_INSTALL[@]} -gt 0 ]]; then
   apt-get install -y "${TO_INSTALL[@]}"
 fi
 
-# Configure device tree
-dtb_src=""
-for candidate in \
-  /usr/lib/linux-image-*/allwinner/a733-cubie-a7z.dtb \
-  /usr/lib/linux-image-*/allwinner/sun60i-a733-cubie-a7z.dtb; do
-  if ls "$candidate" >/dev/null 2>&1; then
-    dtb_src="$candidate"
-    break
-  fi
-done
+# Configure device tree (robust search across linux-image directories)
+dtb_src="$(find /usr/lib/linux-image-* -type f \( -name 'a733-cubie-a7z.dtb' -o -name 'sun60i-a733-cubie-a7z.dtb' \) 2>/dev/null | head -n1)"
 if [[ -n "$dtb_src" ]]; then
   base_name="$(basename "$dtb_src")"
   cp "$dtb_src" /boot/
@@ -415,7 +405,7 @@ if [[ -n "$dtb_src" ]]; then
   fi
   echo "Copied $base_name to /boot and created alias"
 else
-  echo "No Cubie-A7Z DTB found under /usr/lib/linux-image-*/allwinner; skipping copy."
+  echo "No Cubie-A7Z DTB found under /usr/lib/linux-image-*; skipping copy."
 fi
 
 # GPIO support (install if available)
@@ -620,7 +610,21 @@ echo "=== Wayland Desktop Configuration ==="
 apt-get install -y wayland-protocols libwayland-client0 weston sway waybar wofi foot
 
 # Install XFCE for Wayland
-apt-get install -y xfce4 xfce4-goodies xfce4-panel thunar gtk3-engines-xfce
+installable() {
+    local pkg="$1"
+    local cand
+    cand=$(apt-cache policy "$pkg" 2>/dev/null | awk '/Candidate:/ {print $2}')
+    [[ -n "$cand" && "$cand" != "(none)" ]]
+}
+
+# Install XFCE for Wayland (skip unavailable ones)
+for p in xfce4 xfce4-goodies xfce4-panel thunar; do
+    if installable "$p"; then
+        apt-get install -y "$p"
+    else
+        echo "Skipping unavailable package: $p"
+    fi
+done
 
 # Sway compositor configuration
 cat > /etc/sway/config << 'SWAY_EOF'
@@ -716,8 +720,14 @@ XFCE_START_EOF
 
 chmod +x /usr/local/bin/start-wayland.sh /usr/local/bin/start-xfce-wayland.sh
 
-# Compatibility libraries
-apt-get install -y xwayland qtwayland5 qt5-qpa-plugin-wayland gtk-layer-shell libgtk-3-0
+# Compatibility libraries (skip unavailable ones)
+for p in xwayland qtwayland5 qt5-qpa-plugin-wayland libgtk-layer-shell0 libgtk-3-0; do
+    if installable "$p"; then
+        apt-get install -y "$p"
+    else
+        echo "Skipping unavailable package: $p"
+    fi
+done
 
 echo "Wayland desktop configuration completed"
 EOF
@@ -943,11 +953,19 @@ build_system() {
         rm -f config/package-lists/waydroid.list || true
     fi
 
-    # Add Radxa repository inside chroot (no effect on host)
-    mkdir -p config/archives
-    cat > config/archives/radxa.list.chroot << 'EOF'
-deb https://radxa-repo.github.io/bullseye bullseye main
+    # Optionally add Radxa repository inside chroot to install vendor packages
+    # Enable by setting environment variable ENABLE_RADXA_REPO=1
+    if [[ "${ENABLE_RADXA_REPO:-0}" == "1" ]]; then
+        log_info "Enabling optional Radxa repository for vendor packages"
+        mkdir -p config/archives
+        cat > config/archives/radxa.list.chroot << 'EOF'
+deb [signed-by=/usr/share/keyrings/radxa-archive-keyring.gpg] https://radxa-repo.github.io/bullseye bullseye main
 EOF
+        # Note: TLS/CA trust is required; if your environment uses a corporate proxy,
+        # ensure CA certificates are available inside chroot.
+    else
+        log_info "Skipping Radxa repository to align with Kali ARM compatibility"
+    fi
 
     
     # Build

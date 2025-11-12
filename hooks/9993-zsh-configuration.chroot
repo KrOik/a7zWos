@@ -34,7 +34,9 @@ ZSH_EOF
 
 # 设置ZSH为默认shell
 chsh -s /bin/zsh
-chsh -s /bin/zsh kali
+if id "kali" &>/dev/null; then
+    chsh -s /bin/zsh kali || echo "kali 用户不存在或无法切换shell，已跳过"
+fi
 
 # 复制配置到现有用户
 if id "kali" &>/dev/null; then
