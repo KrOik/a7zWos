@@ -1,3 +1,4 @@
+DONT! USE! THIS! WAIT FOR NEWER RELEASE! its not fully prepared!
 # Radxa Cubie A7Z Kali Linux Build System
 
 基于KrNormyDev/a7zWos的Radxa Cubie A7Z开发板Kali Linux构建系统，支持Wayland桌面环境、Waydroid容器和完整的Kali安全工具套件。
